@@ -1,4 +1,4 @@
-# WanderburgCoop
+# Wanderburg Multiplayer / Co-op Mod — WIP Position Tests
 
 **TEST / IN ENTWICKLUNG — bisher nur Positionstests. Noch kein spielbarer Mehrspieler-Koop.**
 
