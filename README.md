@@ -1,4 +1,4 @@
-# WanderburgCoop
+# Wanderburg Multiplayer / Co-op Mod — WIP Position Tests
 
 **TEST / WORK IN PROGRESS — position tests only. Not playable multiplayer co-op.**
 
