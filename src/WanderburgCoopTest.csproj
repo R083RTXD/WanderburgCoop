@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Generated Unity metadata is incompatible with nullable attributes. -->
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>WanderburgCoopTest</AssemblyName>
+    <RootNamespace>WanderburgCoopTest</RootNamespace>
+    <BepInExCore>$(WanderburgGameRoot)/BepInEx/core</BepInExCore>
+    <Interop>$(WanderburgGameRoot)/BepInEx/interop</Interop>
+  </PropertyGroup>
+  <Target Name="CheckGameRoot" BeforeTargets="ResolveReferences">
+    <Error Condition="'$(WanderburgGameRoot)' == ''" Text="Set -p:WanderburgGameRoot to your local Unity game folder; see README.md." />
+    <Error Condition="!Exists('$(Interop)/Assembly-CSharp.dll')" Text="Generate BepInEx IL2CPP interop files by starting your game once first." />
+  </Target>
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp"><HintPath>$(Interop)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.InputSystem"><HintPath>$(Interop)/Unity.InputSystem.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(Interop)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(Interop)/UnityEngine.IMGUIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.PhysicsModule"><HintPath>$(Interop)/UnityEngine.PhysicsModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2Cppmscorlib"><Aliases>il2cpp</Aliases><HintPath>$(Interop)/Il2Cppmscorlib.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="BepInEx.Core"><HintPath>$(BepInExCore)/BepInEx.Core.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="BepInEx.Unity.Common"><HintPath>$(BepInExCore)/BepInEx.Unity.Common.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="BepInEx.Unity.IL2CPP"><HintPath>$(BepInExCore)/BepInEx.Unity.IL2CPP.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppInterop.Runtime"><HintPath>$(BepInExCore)/Il2CppInterop.Runtime.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(BepInExCore)/0Harmony.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>
