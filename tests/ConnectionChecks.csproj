@@ -8,6 +8,7 @@
   <ItemGroup>
     <Compile Include="../src/LocalSession.cs" Link="LocalSession.cs" />
     <Compile Include="../src/PlayerSnapshot.cs" Link="PlayerSnapshot.cs" />
+    <Compile Include="../src/VehicleIdentity.cs" Link="VehicleIdentity.cs" />
     <Compile Include="../src/BackgroundConnection.cs" Link="BackgroundConnection.cs" />
     <Compile Include="../src/FocusSafety.cs" Link="FocusSafety.cs" />
   </ItemGroup>

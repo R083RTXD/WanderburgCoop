@@ -12,7 +12,7 @@ namespace WanderburgCoopTest;
 public sealed class LocalSession : IDisposable
 {
     private const int Port = 28714;
-    private const string Protocol = "WB04";
+    private const string Protocol = "WB05";
     private readonly Stopwatch clock = Stopwatch.StartNew();
     private UdpClient socket;
     private IPEndPoint peer;

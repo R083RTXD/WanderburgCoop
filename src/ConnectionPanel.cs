@@ -90,10 +90,21 @@ public sealed class ConnectionPanel : MonoBehaviour
                 return new PlayerSnapshot(false, scene, 0, 0, 0, 0);
             }
             var vm = gm.vm;
-            Transform player = vm.rb ? vm.rb.transform : vm.transform;
+            // Sample the visual origin so the remote mesh has the same height
+            // and facing as the displayed vehicle, not its separate rigidbody.
+            var visual = vm.vp;
+            Transform player = visual ? visual.transform : vm.rb ? vm.rb.transform : vm.transform;
+            ulong skinMask = 0;
+            if (visual && visual.myVehicleSkinElements != null)
+            {
+                var skins = visual.myVehicleSkinElements;
+                for (int i = 0; i < Math.Min(64, skins.Length); i++)
+                    if (skins[i] && skins[i].gameObject.activeSelf) skinMask |= 1UL << i;
+            }
             var pos = player.position;
             var value = new PlayerSnapshot(true, scene, pos.x, pos.y, pos.z,
-                Mathf.Repeat(player.eulerAngles.y, 360));
+                Mathf.Repeat(player.eulerAngles.y, 360),
+                VehicleModel.GetIdentity(visual), skinMask);
             if (!value.IsValid) throw new InvalidOperationException("Player transform is outside supported bounds.");
             playerStatus = $"Lokal: X {pos.x:F1} / Z {pos.z:F1}";
             return value;
@@ -113,7 +124,7 @@ public sealed class ConnectionPanel : MonoBehaviour
     public void OnGUI()
     {
         float x = Math.Max(8, Screen.width - 408);
-        GUI.Box(new Rect(x, 8, 400, 376), "Wanderburg Co-op 0.4.6 - Welt-/Positionstest (lokal)");
+        GUI.Box(new Rect(x, 8, 400, 376), "Wanderburg Co-op 0.5.0 - Fahrzeug-/Positionstest");
         GUI.Label(new Rect(x + 12, 38, 376, 25), connection.Status);
         GUI.Label(new Rect(x + 12, 64, 376, 25), $"Pakete: gesendet {connection.Sent} / empfangen {connection.Received}");
         if (!connection.Active)
@@ -139,7 +150,7 @@ public sealed class ConnectionPanel : MonoBehaviour
         GUI.Label(new Rect(x + 12, 166, 376, 25), remoteStatus);
         GUI.Label(new Rect(x + 12, 192, 376, 25), $"Positionspakete: {connection.SnapshotsReceived} | Figur: {(remoteView.Visible ? "sichtbar" : "aus")}");
         GUI.Label(new Rect(x + 12, 218, 376, 25), $"Weltsamen: {(connection.SessionSeed > 0 ? connection.SessionSeed : 0)}");
-        GUI.Label(new Rect(x + 12, 244, 376, 25), "Testfigur: tuerkis; beide ins gleiche Biom starten.");
+        GUI.Label(new Rect(x + 12, 244, 376, 25), "Darstellung: " + remoteView.Representation);
         GUI.Label(new Rect(x + 12, 270, 376, 25), "TESTMODUS: Run-Fortschritt wird nicht gespeichert.");
         GUI.Label(new Rect(x + 12, 296, 376, 25), "Gleicher Welt-Seed; Gegner/Kampf noch getrennt.");
         if (GUI.Button(new Rect(x + 12, 328, 372, 30),

@@ -12,7 +12,13 @@ internal sealed class RemotePlayerView : IDisposable
     private Material material;
     private int scene = int.MinValue;
     private bool initialized;
+    private readonly VehicleModel vehicleModel = new();
+    private uint vehicleId;
+    private ulong skinMask;
+    private bool hasVehicleModel;
+    private float nextModelAttempt;
     public bool Visible { get; private set; }
+    public string Representation => hasVehicleModel ? "Fahrzeugmodell" : "Testfigur (Modell fehlt)";
 
     public void Update(ConnectionInfo session, PlayerSnapshot local)
     {
@@ -24,12 +30,13 @@ internal sealed class RemotePlayerView : IDisposable
             Visible = initialized = false;
             return;
         }
-        if (!root || scene != local.Scene)
+        if (!root || scene != local.Scene || vehicleId != remote.VehicleId || skinMask != remote.SkinMask ||
+            (!hasVehicleModel && remote.VehicleId != 0 && Time.unscaledTime >= nextModelAttempt))
         {
-            Dispose();
-            Create(local.Scene);
+            ClearView();
+            Create(local.Scene, remote);
         }
-        Vector3 position = new(remote.X, remote.Y + 2, remote.Z);
+        Vector3 position = new(remote.X, remote.Y + (hasVehicleModel ? 0 : 2), remote.Z);
         Quaternion rotation = Quaternion.Euler(0, remote.Yaw, 0);
         if (!initialized || Vector3.Distance(root.transform.position, position) > 40)
         {
@@ -46,12 +53,18 @@ internal sealed class RemotePlayerView : IDisposable
         Visible = true;
     }
 
-    private void Create(int sceneId)
+    private void Create(int sceneId, PlayerSnapshot remote)
     {
         scene = sceneId;
         root = new GameObject("WanderburgCoop_RemotePlayer_TestMarker");
+        root.SetActive(false);
         // A plain GameObject is scene-owned. Keep it out of the persistent plugin scene.
         SceneManager.MoveGameObjectToScene(root, SceneManager.GetActiveScene());
+        vehicleId = remote.VehicleId;
+        skinMask = remote.SkinMask;
+        nextModelAttempt = Time.unscaledTime + 2;
+        hasVehicleModel = vehicleModel.TryBuild(root, remote);
+        if (hasVehicleModel) return;
         Shader shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color") ?? Shader.Find("Sprites/Default");
         if (shader)
         {
@@ -80,13 +93,22 @@ internal sealed class RemotePlayerView : IDisposable
         if (material) part.GetComponent<Renderer>().sharedMaterial = material;
     }
 
-    public void Dispose()
+    private void ClearView()
     {
+        if (root) root.SetActive(false);
         if (root) Object.Destroy(root);
         if (material) Object.Destroy(material);
         root = null;
         material = null;
         initialized = Visible = false;
         scene = int.MinValue;
+        hasVehicleModel = false;
+        vehicleModel.ClearMeshes();
+    }
+
+    public void Dispose()
+    {
+        ClearView();
+        vehicleModel.Dispose();
     }
 }

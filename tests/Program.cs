@@ -59,7 +59,7 @@ using (var conflictingHost = new LocalSession())
 }
 using (var malformed = new UdpClient())
 {
-    var bytes = Encoding.ASCII.GetBytes("WB04|HELLO|not-a-token");
+    var bytes = Encoding.ASCII.GetBytes("WB05|HELLO|not-a-token");
     malformed.Send(bytes, bytes.Length, new IPEndPoint(IPAddress.Loopback, 28714));
     Thread.Sleep(20);
     host.Tick();
@@ -70,12 +70,18 @@ Pump(host, client, () => host.Connected && client.Connected);
 Check(host.Connected && client.Connected, "Both peers complete handshake");
 Check(host.SessionSeed > 0 && client.SessionSeed == host.SessionSeed,
     "Host-authoritative world seed reaches the client");
-host.LocalSnapshot = new PlayerSnapshot(true, 2, 100.25f, 0, -53.5f, 179);
-client.LocalSnapshot = new PlayerSnapshot(true, 2, -23.5f, 0.2f, 12.25f, 359.5f);
+host.LocalSnapshot = new PlayerSnapshot(true, 2, 100.25f, 0, -53.5f, 179,
+    VehicleIdentity.FromModuleId("castle_A"), 1);
+client.LocalSnapshot = new PlayerSnapshot(true, 2, -23.5f, 0.2f, 12.25f, 359.5f,
+    VehicleIdentity.FromModuleId("castle_B"), 2);
 Pump(host, client, () => host.RemoteSnapshot == client.LocalSnapshot && client.RemoteSnapshot == host.LocalSnapshot);
 Check(host.RemoteSnapshot == client.LocalSnapshot && client.RemoteSnapshot == host.LocalSnapshot,
     "Player position, rotation and scene travel both ways");
 Check(host.HasFreshSnapshot && client.HasFreshSnapshot, "New snapshots are fresh");
+host.LocalSnapshot = host.LocalSnapshot with { SkinMask = 4 };
+Pump(host, client, () => client.RemoteSnapshot.SkinMask == 4);
+Check(client.RemoteSnapshot.VehicleId == host.LocalSnapshot.VehicleId && client.RemoteSnapshot.SkinMask == 4,
+    "Vehicle upgrade appearance reaches the other peer without reconnecting");
 client.LocalSnapshot = new PlayerSnapshot(false, 0, 0, 0, 0, 0);
 Pump(host, client, () => !host.RemoteSnapshot.InRun);
 Check(!host.RemoteSnapshot.InRun, "Leaving the run clears remote presence");
@@ -113,13 +119,26 @@ while (host.Active && wait.Elapsed.TotalSeconds < 6)
 Check(!host.Active, "Silent peer times out and releases socket");
 Check(!host.HasFreshSnapshot, "Disconnected peer cannot leave a visible stale marker");
 
-var state = new PlayerSnapshot(true, 3, -12.5f, 0.25f, 50.5f, 359.9f);
+Check(VehicleIdentity.FromModuleId("") == 0, "Missing vehicle identity uses marker fallback");
+Check(VehicleIdentity.FromModuleId("castle_A") != VehicleIdentity.FromModuleId("castle_B"),
+    "Different vehicle module IDs select different visuals");
+var state = new PlayerSnapshot(true, 3, -12.5f, 0.25f, 50.5f, 359.9f, uint.MaxValue, ulong.MaxValue);
 var previousCulture = System.Globalization.CultureInfo.CurrentCulture;
 System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("de-DE");
-string[] fields = ("WB04|STATE|" + Guid.NewGuid().ToString("N") + "|" + state.ToPayload(42)).Split('|');
+string[] fields = ("WB05|STATE|" + Guid.NewGuid().ToString("N") + "|" + state.ToPayload(42)).Split('|');
 Check(PlayerSnapshot.TryRead(fields, out long sequence, out var parsed) && sequence == 42 && parsed == state,
     "Wire format roundtrips under German decimal culture");
 System.Globalization.CultureInfo.CurrentCulture = previousCulture;
+foreach (int fieldIndex in new[] { 10, 11 })
+{
+    var invalidIdentity = (string[])fields.Clone();
+    invalidIdentity[fieldIndex] = "-1";
+    Check(!PlayerSnapshot.TryRead(invalidIdentity, out _, out _), "Negative visual identity rejected: " + fieldIndex);
+    invalidIdentity[fieldIndex] = "18446744073709551616";
+    Check(!PlayerSnapshot.TryRead(invalidIdentity, out _, out _), "Overflowing visual identity rejected: " + fieldIndex);
+}
+Check(!PlayerSnapshot.TryRead(fields.Take(10).ToArray(), out _, out _),
+    "Old snapshot without vehicle identity cannot enter the new session");
 foreach (string bad in new[] { "NaN", "Infinity", "1000001", "-1000001", "garbage" })
 {
     var invalid = (string[])fields.Clone();
@@ -147,31 +166,31 @@ using (var rawPeer = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0)))
         Thread.Sleep(15);
         host.Tick();
     }
-    SendRaw("WB03|HELLO|" + token);
-    Check(!host.Connected, "Old protocol cannot join the new version");
     SendRaw("WB04|HELLO|" + token);
+    Check(!host.Connected, "Old protocol cannot join the new version");
+    SendRaw("WB05|HELLO|" + token);
     Check(host.Connected, "Raw test peer completes handshake");
-    SendRaw("WB04|STATE|" + token + "|" + state.ToPayload(10));
+    SendRaw("WB05|STATE|" + token + "|" + state.ToPayload(10));
     Check(host.RemoteSnapshot == state, "Valid snapshot accepted from selected peer");
     var moved = state with { X = 50 };
-    SendRaw("WB04|STATE|" + token + "|" + moved.ToPayload(9));
+    SendRaw("WB05|STATE|" + token + "|" + moved.ToPayload(9));
     Check(host.RemoteSnapshot == state && host.SnapshotsReceived == 1, "Out-of-order snapshot cannot move marker backwards");
-    SendRaw("WB04|STATE|" + token + "|" + moved.ToPayload(10));
+    SendRaw("WB05|STATE|" + token + "|" + moved.ToPayload(10));
     Check(host.RemoteSnapshot == state && host.SnapshotsReceived == 1, "Duplicate sequence is ignored");
-    SendRaw("WB04|STATE|" + Guid.NewGuid().ToString("N") + "|" + moved.ToPayload(11));
+    SendRaw("WB05|STATE|" + Guid.NewGuid().ToString("N") + "|" + moved.ToPayload(11));
     Check(host.RemoteSnapshot == state, "Wrong-session snapshot ignored");
     var invalid = state with { X = float.NaN };
-    SendRaw("WB04|STATE|" + token + "|" + invalid.ToPayload(11));
+    SendRaw("WB05|STATE|" + token + "|" + invalid.ToPayload(11));
     Check(host.RemoteSnapshot == state, "Nonfinite network coordinates never enter presentation state");
-    SendRaw("WB04|STATE|" + token + "|" + moved.ToPayload(11));
+    SendRaw("WB05|STATE|" + token + "|" + moved.ToPayload(11));
     Check(host.RemoteSnapshot == moved, "Next valid snapshot applies after malformed packet");
     using var stranger = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
-    byte[] foreign = Encoding.ASCII.GetBytes("WB04|STATE|" + token + "|" + state.ToPayload(12));
+    byte[] foreign = Encoding.ASCII.GetBytes("WB05|STATE|" + token + "|" + state.ToPayload(12));
     stranger.Send(foreign, foreign.Length, new IPEndPoint(IPAddress.Loopback, 28714));
     Thread.Sleep(15);
     host.Tick();
     Check(host.RemoteSnapshot == moved, "Different endpoint cannot inject snapshots with copied token");
-    SendRaw("WB04|BYE|" + token);
+    SendRaw("WB05|BYE|" + token);
 }
 static void WaitUntil(Func<bool> done, double timeout = 3)
 {

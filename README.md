@@ -8,38 +8,39 @@
 
 An unofficial, experimental BepInEx mod for Wanderburg by **R083RTXD**.
 This repository shares the development process, including unsuccessful experiments.
-Current investigation build: **0.4.6**, targeting Wanderburg **0.9.14b**, Windows x64,
+Current vehicle-visual test build: **0.5.0**, targeting Wanderburg **0.9.14b**, Windows x64,
 Unity 6000.0.63f1 and BepInEx 6.0.0-be.789 (Unity IL2CPP).
 
 ## What currently works
 
 - Two instances on the **same Windows PC** connect using UDP `127.0.0.1:28714`.
-- Player position and heading are exchanged and displayed as a small cyan test marker.
+- Player position and heading are exchanged. Version 0.5.0 attempts to display
+  the remote vehicle's meshes and active skin stages; the cyan marker remains a fallback.
 - Position movement was verified manually in both game instances.
 - A host-provided map seed is sent to both instances; matching seeds were verified manually.
 - Networking runs on a background worker so Unity loading stalls do not stop heartbeats.
 - F8 temporarily releases the cursor for switching windows.
 
 The matching seed does **not** mean both players share one authoritative world.
-Real castle/vehicle replication, synchronized enemies, combat, damage, loot,
+Vehicle gameplay replication, synchronized enemies, combat, damage, loot,
 XP, upgrades and shared progression are **not implemented**.
 Internet connections, LAN discovery, invitation codes, NAT traversal and Steam
 lobbies are **not implemented**. Current tests use loopback on one computer.
 
 ## Known problems and test status
 
-**The client can crash shortly after the host closes. This is unresolved.**
-Windows recorded a native `GameAssembly.dll` crash. Earlier attempts to explain
-it as an inherited quit-button click were not confirmed; the shared Unity log
-could not reliably identify which process called quit.
+On 2026-10-22 the user confirmed that with 0.4.6 either peer keeps running when
+the other closes. Version 0.5.0 retains that focus protection.
 
-Build 0.4.6 keeps focus-loss protection active after disconnect and logs every
-`GM.CloseApplication` request with its process ID. This is an investigation
-change awaiting an in-game result, **not a confirmed fix**.
+**Vehicle rendering in 0.5.0 still requires an in-game check.** Only static
+meshes/materials are copied. Wheels, weapon animation, attached modules, crew
+and cosmetics are not separately replicated. Unknown models retain the marker.
+Both peers must use 0.5.0: the WB05 visual protocol is incompatible with WB04.
+The skin mask supports the first 64 entries in a vehicle's skin-element array.
 
-The 0.4.6 plugin compiled with zero errors and warnings. The managed transport
-and policy suite most recently passed 53 checks on 0.4.5. Those checks do not
-validate the native game runtime or prove the disconnect crash is fixed.
+The plugin compiles without errors/warnings. 61 managed transport and policy
+checks pass, including vehicle identity, skin changes and old-protocol rejection.
+These checks do not validate Unity rendering or native game behavior.
 
 The development plugin blocks identified game-save write paths.
 **Test-run progress is not saved. Remove the plugin before normal play.**
@@ -53,7 +54,7 @@ earlier claims about crash fixes are superseded by this status.
 2. Download a test ZIP from the [version archive](versions/README.md).
 3. Close every game instance and copy only `WanderburgCoopTest.dll` into
    `BepInEx/plugins/`. Replace the existing copy; do not install multiple versions.
-4. Start two game instances normally. The current panel should show **0.4.6**.
+4. Start two game instances normally. The current panel should show **0.5.0**.
    Do not use hidden `-batchmode -nographics` startup checks.
 5. In the main menu, select **Host erstellen** in one instance and
    **Lokal beitreten** in the other. Wait for the connection.

@@ -8,38 +8,40 @@
 
 Ein inoffizieller, experimenteller BepInEx-Mod für Wanderburg von **R083RTXD**.
 Das Repository zeigt die Entwicklung einschließlich fehlgeschlagener Versuche.
-Aktueller Diagnosebuild: **0.4.6**, für Wanderburg **0.9.14b**, Windows x64,
+Aktueller Fahrzeug-Darstellungstest: **0.5.0**, für Wanderburg **0.9.14b**, Windows x64,
 Unity 6000.0.63f1 und BepInEx 6.0.0-be.789 (Unity IL2CPP).
 
 ## Was bisher funktioniert
 
 - Zwei Instanzen auf **demselben Windows-PC** verbinden sich über UDP `127.0.0.1:28714`.
-- Position und Blickrichtung werden übertragen und als kleine türkise Testfigur angezeigt.
+- Position und Blickrichtung werden übertragen. 0.5.0 versucht, die Fahrzeugmeshes
+  und aktiven Ausbaustufen des Gegenübers darzustellen; die türkise Figur bleibt als Fallback.
 - Die Bewegung der Testfigur wurde in beiden Spielinstanzen manuell bestätigt.
 - Der Host überträgt einen gemeinsamen Karten-Seed; gleiche Seeds wurden manuell bestätigt.
 - Ein Hintergrund-Thread hält die Netzwerkverbindung auch während Unity-Ladepausen aufrecht.
 - F8 gibt die Maus vorübergehend zum Fensterwechsel frei.
 
 Ein gleicher Seed bedeutet **keine gemeinsam simulierte Welt**.
-Die echten Burgen/Fahrzeuge, Gegner, Kämpfe, Schaden, Beute, XP, Upgrades
+Fahrzeug-Spielmechanik, Gegner, Kämpfe, Schaden, Beute, XP, Upgrades
 und gemeinsamer Fortschritt sind **noch nicht synchronisiert**.
 Internetverbindungen, LAN-Suche, Einladungscodes, NAT-Durchquerung und
 Steam-Lobbys sind **nicht implementiert**. Die Tests laufen lokal auf einem PC.
 
 ## Bekannte Fehler und Prüfstand
 
-**Der Client kann kurz nach dem Schließen des Hosts abstürzen. Das ist noch ungelöst.**
-Windows meldete einen nativen Absturz in `GameAssembly.dll`.
-Die frühere Erklärung mit einem übernommenen Beenden-Klick war nicht belegt:
-Das gemeinsame Unity-Log ließ keine sichere Zuordnung zum jeweiligen Prozess zu.
+Am 22.10.2026 hat der Nutzer bestätigt: Mit 0.4.6 läuft nach dem Schließen von
+Host oder Client die andere Instanz weiter. 0.5.0 behält diesen Fokusschutz bei.
 
-Build 0.4.6 behält den Fokusschutz nach Verbindungsverlust bei und protokolliert
-jeden `GM.CloseApplication`-Aufruf mit Prozess-ID. Diese Änderung dient der
-Untersuchung und wartet auf einen Spieltest; sie ist **keine bestätigte Behebung**.
+**Die Fahrzeugdarstellung in 0.5.0 muss noch im Spiel geprüft werden.** Es werden
+nur statische Meshes und Materialien übernommen. Räder, Waffenanimationen,
+angebaute Module, Besatzung und Dekoration werden nicht separat synchronisiert.
+Für unbekannte Modelle bleibt die Testfigur sichtbar. Beide Instanzen müssen
+0.5.0 nutzen: WB05 ist nicht mit WB04 kompatibel. Die Zustandsmaske unterstützt
+die ersten 64 Einträge der Ausbaustufen-Liste eines Fahrzeugs.
 
-0.4.6 wurde ohne Fehler oder Warnungen kompiliert. Die verwaltete Netzwerk-
-und Regeltestsuite bestand zuletzt unter 0.4.5 insgesamt 53 Prüfungen.
-Diese Tests prüfen weder die native Spielausführung noch die Behebung des Absturzes.
+Der Mod kompiliert ohne Fehler/Warnungen. 61 verwaltete Netzwerk- und Regeltests
+bestehen, einschließlich Modellkennung, Stufenwechsel und Abweisung alter Protokolle.
+Diese Tests prüfen weder Unity-Darstellung noch die native Spielausführung.
 
 Der Entwicklungsmod blockiert die gefundenen Spielstand-Schreibmethoden.
 **Test-Fortschritt wird nicht gespeichert. Für normales Spielen den Mod entfernen.**
@@ -53,7 +55,7 @@ Frühere Aussagen zur Absturzbehebung sind durch diesen Prüfstand überholt.
 2. Ein Test-ZIP aus dem [Versionsarchiv](versions/README.md) herunterladen.
 3. Alle Spielinstanzen schließen und nur `WanderburgCoopTest.dll` nach
    `BepInEx/plugins/` kopieren. Alte Kopie ersetzen; keine Versionen parallel installieren.
-4. Zwei Spielinstanzen normal starten. Im aktuellen Fenster muss **0.4.6** stehen.
+4. Zwei Spielinstanzen normal starten. Im aktuellen Fenster muss **0.5.0** stehen.
    Keine unsichtbaren Starttests mit `-batchmode -nographics` verwenden.
 5. Im Hauptmenü einmal **Host erstellen** und in der anderen Instanz
    **Lokal beitreten** wählen. Die Verbindung abwarten.

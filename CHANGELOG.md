@@ -6,12 +6,26 @@
 > Historical entries describe attempted changes, not proven runtime fixes.
 > Versions 0.4.0–0.4.5 did not resolve the client crash after host exit.
 > Windows crash dumps confirmed a native client failure; earlier explanations
-> based on shared Player.log output were unreliable. 0.4.6 is awaiting validation.
+> based on shared Player.log output were unreliable. On 2026-10-22 the user
+> confirmed that 0.4.6 keeps either surviving peer running after the other closes.
 >
 > Ältere Einträge dokumentieren Versuche, keine bestätigten Laufzeitbehebungen.
 > 0.4.0–0.4.5 haben den Client-Absturz nach Host-Ende nicht behoben.
 > Windows-Crashdumps bestätigen einen nativen Client-Absturz. Frühere Aussagen
-> aus dem gemeinsamen Player.log waren nicht zuverlässig. 0.4.6 ist noch ungeprüft.
+> aus dem gemeinsamen Player.log waren nicht zuverlässig. Am 22.10.2026 hat der
+> Nutzer das getrennte Beenden in beiden Richtungen mit 0.4.6 bestätigt.
+
+## 0.5.0 — 2026-10-22 — vehicle visual test
+
+- Extend protocol to WB05 with stable vehicle identity and a 64-bit skin-state mask.
+- Render remote vehicles from resident game meshes/materials using empty visual
+  objects only; no prefab instantiation, gameplay scripts, physics or audio.
+- Rebuild the visual on vehicle/skin changes; retain the cyan marker as fallback.
+- Sample position from the vehicle's visual origin and retain movement smoothing.
+- Preserve the 0.4.6 focus behavior, which the user confirmed survives closing
+  either peer. Visible vehicle rendering still requires an in-game test.
+- Weapons, wheel animation, attached modules, enemies, combat and progression
+  remain unsynchronized. Static vehicle appearance only, not playable co-op.
 
 ## 0.4.6 — investigation build
 

@@ -16,3 +16,5 @@ a3bd4fb6fd7d0609e70a131cea2d1ca24981e4f9d86e37e7b3322d8e74addc41  packages/Wande
 b917a7edb7b7d812876ce5a2c10f920bab402d9f32d6c84bc51e92db97b05ff0  source/WanderburgCoop-source-0.4.4.zip
 cba383b72d133bb11a4cd77966f031a9503d681dfd284b885fb39397a5444149  source/WanderburgCoop-source-0.4.5.zip
 821fc077e4a34e8e51ff5a272de6c39ac8a802964d2cc14d9afe32b77099a60e  source/WanderburgCoop-source-0.4.6.zip
+196a045b1781d84b62ebc7d54b38b644e6241fcc7ed99128e3b7a6f34b1ed721  packages/WanderburgCoop-0.5.0-vehicle-visual-test.zip
+341f893b97ddd1284ae7a36d98565b7834eafddf7d10d16d1075bb9eb0583f9a  source/WanderburgCoop-source-0.5.0.zip
