@@ -8,13 +8,13 @@
 
 Ein inoffizieller, experimenteller BepInEx-Mod für Wanderburg von **R083RTXD**.
 Das Repository zeigt die Entwicklung einschließlich fehlgeschlagener Versuche.
-Aktueller Fahrzeug-Darstellungstest: **0.5.0**, für Wanderburg **0.9.14b**, Windows x64,
+Aktueller Fahrzeug-Darstellungstest: **0.5.2**, für Wanderburg **0.9.14b**, Windows x64,
 Unity 6000.0.63f1 und BepInEx 6.0.0-be.789 (Unity IL2CPP).
 
 ## Was bisher funktioniert
 
 - Zwei Instanzen auf **demselben Windows-PC** verbinden sich über UDP `127.0.0.1:28714`.
-- Position und Blickrichtung werden übertragen. 0.5.0 versucht, die Fahrzeugmeshes
+- Position und Blickrichtung werden übertragen. 0.5.2 versucht, die Fahrzeugmeshes
   und aktiven Ausbaustufen des Gegenübers darzustellen; die türkise Figur bleibt als Fallback.
 - Die Bewegung der Testfigur wurde in beiden Spielinstanzen manuell bestätigt.
 - Der Host überträgt einen gemeinsamen Karten-Seed; gleiche Seeds wurden manuell bestätigt.
@@ -30,16 +30,26 @@ Steam-Lobbys sind **nicht implementiert**. Die Tests laufen lokal auf einem PC.
 ## Bekannte Fehler und Prüfstand
 
 Am 22.10.2026 hat der Nutzer bestätigt: Mit 0.4.6 läuft nach dem Schließen von
-Host oder Client die andere Instanz weiter. 0.5.0 behält diesen Fokusschutz bei.
+Host oder Client die andere Instanz weiter. 0.5.2 behält diesen Fokusschutz bei.
 
-**Die Fahrzeugdarstellung in 0.5.0 muss noch im Spiel geprüft werden.** Es werden
+**0.5.0 zeigte einen normalen Burgkörper mit Spinnenbeinen.** 0.5.2 überträgt
+zusätzlich eine Kennung der sichtbaren Meshes/Materialien und verwendet nur ein
+passendes laufendes oder geladenes Modell. Der richtige Körper wurde mit 0.5.1
+vom Nutzer bestätigt; dort fehlten die ausgelagerten Spinnenbeine, während die
+normale Burg samt Rädern sichtbar war. 0.5.2 übernimmt zusätzlich die zugehörigen
+Beinobjekte. Am 22.10.2026 hat der Nutzer bestätigt: Der richtige Spinnenburgkörper
+und die Beine sind jetzt sichtbar und funktionieren im Test mit zwei Instanzen.
+Die Beine bleiben statisch; Animationen sind noch nicht implementiert.
+Fehlt ein passendes Aussehen, bleibt die türkise Figur.
+Es werden
 nur statische Meshes und Materialien übernommen. Räder, Waffenanimationen,
 angebaute Module, Besatzung und Dekoration werden nicht separat synchronisiert.
 Für unbekannte Modelle bleibt die Testfigur sichtbar. Beide Instanzen müssen
-0.5.0 nutzen: WB05 ist nicht mit WB04 kompatibel. Die Zustandsmaske unterstützt
+0.5.2 für übereinstimmende Körper-/Beinkennungen nutzen. WB06 ist nicht mit
+WB04/WB05 kompatibel. Die Zustandsmaske unterstützt
 die ersten 64 Einträge der Ausbaustufen-Liste eines Fahrzeugs.
 
-Der Mod kompiliert ohne Fehler/Warnungen. 61 verwaltete Netzwerk- und Regeltests
+Der Mod kompiliert ohne Fehler/Warnungen. 67 verwaltete Netzwerk- und Regeltests
 bestehen, einschließlich Modellkennung, Stufenwechsel und Abweisung alter Protokolle.
 Diese Tests prüfen weder Unity-Darstellung noch die native Spielausführung.
 
@@ -55,7 +65,7 @@ Frühere Aussagen zur Absturzbehebung sind durch diesen Prüfstand überholt.
 2. Ein Test-ZIP aus dem [Versionsarchiv](versions/README.md) herunterladen.
 3. Alle Spielinstanzen schließen und nur `WanderburgCoopTest.dll` nach
    `BepInEx/plugins/` kopieren. Alte Kopie ersetzen; keine Versionen parallel installieren.
-4. Zwei Spielinstanzen normal starten. Im aktuellen Fenster muss **0.5.0** stehen.
+4. Zwei Spielinstanzen normal starten. Im aktuellen Fenster muss **0.5.2** stehen.
    Keine unsichtbaren Starttests mit `-batchmode -nographics` verwenden.
 5. Im Hauptmenü einmal **Host erstellen** und in der anderen Instanz
    **Lokal beitreten** wählen. Die Verbindung abwarten.

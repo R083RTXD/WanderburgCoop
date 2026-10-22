@@ -4,6 +4,12 @@ namespace WanderburgCoopTest;
 // IDs select locally loaded assets only. The network never supplies asset paths.
 public static class VehicleIdentity
 {
+    public static uint FromAppearance(IEnumerable<string> visibleParts)
+    {
+        var parts = visibleParts.OrderBy(value => value, StringComparer.Ordinal).ToArray();
+        return parts.Length == 0 ? 0 : FromModuleId(string.Join("\n", parts));
+    }
+
     public static uint FromModuleId(string moduleId)
     {
         if (string.IsNullOrEmpty(moduleId)) return 0;

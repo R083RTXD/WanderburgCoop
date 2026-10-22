@@ -14,6 +14,7 @@ internal sealed class RemotePlayerView : IDisposable
     private bool initialized;
     private readonly VehicleModel vehicleModel = new();
     private uint vehicleId;
+    private uint appearanceId;
     private ulong skinMask;
     private bool hasVehicleModel;
     private float nextModelAttempt;
@@ -31,6 +32,7 @@ internal sealed class RemotePlayerView : IDisposable
             return;
         }
         if (!root || scene != local.Scene || vehicleId != remote.VehicleId || skinMask != remote.SkinMask ||
+            appearanceId != remote.AppearanceId ||
             (!hasVehicleModel && remote.VehicleId != 0 && Time.unscaledTime >= nextModelAttempt))
         {
             ClearView();
@@ -61,6 +63,7 @@ internal sealed class RemotePlayerView : IDisposable
         // A plain GameObject is scene-owned. Keep it out of the persistent plugin scene.
         SceneManager.MoveGameObjectToScene(root, SceneManager.GetActiveScene());
         vehicleId = remote.VehicleId;
+        appearanceId = remote.AppearanceId;
         skinMask = remote.SkinMask;
         nextModelAttempt = Time.unscaledTime + 2;
         hasVehicleModel = vehicleModel.TryBuild(root, remote);

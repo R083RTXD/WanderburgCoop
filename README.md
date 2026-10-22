@@ -8,13 +8,13 @@
 
 An unofficial, experimental BepInEx mod for Wanderburg by **R083RTXD**.
 This repository shares the development process, including unsuccessful experiments.
-Current vehicle-visual test build: **0.5.0**, targeting Wanderburg **0.9.14b**, Windows x64,
+Current vehicle-visual test build: **0.5.2**, targeting Wanderburg **0.9.14b**, Windows x64,
 Unity 6000.0.63f1 and BepInEx 6.0.0-be.789 (Unity IL2CPP).
 
 ## What currently works
 
 - Two instances on the **same Windows PC** connect using UDP `127.0.0.1:28714`.
-- Player position and heading are exchanged. Version 0.5.0 attempts to display
+- Player position and heading are exchanged. Version 0.5.2 attempts to display
   the remote vehicle's meshes and active skin stages; the cyan marker remains a fallback.
 - Position movement was verified manually in both game instances.
 - A host-provided map seed is sent to both instances; matching seeds were verified manually.
@@ -30,15 +30,23 @@ lobbies are **not implemented**. Current tests use loopback on one computer.
 ## Known problems and test status
 
 On 2026-10-22 the user confirmed that with 0.4.6 either peer keeps running when
-the other closes. Version 0.5.0 retains that focus protection.
+the other closes. Version 0.5.2 retains that focus protection.
 
-**Vehicle rendering in 0.5.0 still requires an in-game check.** Only static
+**0.5.0 showed a default castle body with spider legs.** Version 0.5.2 adds an
+appearance fingerprint and only uses a matching live/resident model. The exact
+spider body is now confirmed correct by the user. In 0.5.1 its detached legs
+were absent; normal castle wheels were visible. Version 0.5.2 also copies the
+owned detached leg objects. On 2026-10-22 the user confirmed that the correct
+spider body and legs are now visible and work in the two-instance test.
+The legs are still static; animations are not implemented. If no matching
+appearance is available, the cyan marker remains visible. Only static
 meshes/materials are copied. Wheels, weapon animation, attached modules, crew
 and cosmetics are not separately replicated. Unknown models retain the marker.
-Both peers must use 0.5.0: the WB05 visual protocol is incompatible with WB04.
+Both peers must use 0.5.2 for matching body/leg fingerprints. WB06 is incompatible
+with the older WB04/WB05 packet formats.
 The skin mask supports the first 64 entries in a vehicle's skin-element array.
 
-The plugin compiles without errors/warnings. 61 managed transport and policy
+The plugin compiles without errors/warnings. 67 managed transport and policy
 checks pass, including vehicle identity, skin changes and old-protocol rejection.
 These checks do not validate Unity rendering or native game behavior.
 
@@ -54,7 +62,7 @@ earlier claims about crash fixes are superseded by this status.
 2. Download a test ZIP from the [version archive](versions/README.md).
 3. Close every game instance and copy only `WanderburgCoopTest.dll` into
    `BepInEx/plugins/`. Replace the existing copy; do not install multiple versions.
-4. Start two game instances normally. The current panel should show **0.5.0**.
+4. Start two game instances normally. The current panel should show **0.5.2**.
    Do not use hidden `-batchmode -nographics` startup checks.
 5. In the main menu, select **Host erstellen** in one instance and
    **Lokal beitreten** in the other. Wait for the connection.

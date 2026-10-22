@@ -15,6 +15,34 @@
 > aus dem gemeinsamen Player.log waren nicht zuverlässig. Am 22.10.2026 hat der
 > Nutzer das getrennte Beenden in beiden Richtungen mit 0.4.6 bestätigt.
 
+## 0.5.2 — 2026-10-22 — detached spider leg test
+
+- User confirmed correct spider body in 0.5.1 but missing legs; normal castle
+  body and wheels are visible. Spider controllers maintain detached leg objects.
+- Include owned SpiderLegController.legObjs and SpiderLegController2.myLegsObjParents
+  in the appearance fingerprint and render-only copy, with renderer deduplication.
+- Rebase detached leg roots from world space into the vehicle's visual frame.
+- Preserve body selection, focus protection and static-only rendering. No leg
+  controllers, IK scripts, damage, sound or physics components are cloned.
+- WB06 packet layout unchanged, but both instances must use 0.5.2 for matching
+  appearance fingerprints.
+- Manual result on 2026-10-22: user confirmed the correct spider castle body
+  and visible legs; the two-instance visual test works. Animation remains absent.
+- Manueller Test am 22.10.2026: richtiger Spinnenburgkörper und sichtbare Beine
+  vom Nutzer bestätigt. Darstellungstest funktioniert; Animationen fehlen noch.
+
+## 0.5.1 — 2026-10-22 — castle body matching test
+
+- 0.5.0 was observed to show the default castle body with correct spider legs
+  even when both players selected the spider castle. Both logs used PV_Spider_0.
+- Add a stable appearance fingerprint of visible mesh branches and materials.
+- Prefer the live local vehicle when its appearance matches the peer exactly;
+  otherwise require an appearance-matched resident vehicle or keep the marker.
+- Stop applying the live skin-index mask to a potentially different prefab layout.
+- Use WB06 so old clients without body identity cannot silently select a model.
+- 67 managed checks pass; the original two-spider-castle reproduction still
+  requires an in-game check. Legs remain static; this does not add animation.
+
 ## 0.5.0 — 2026-10-22 — vehicle visual test
 
 - Extend protocol to WB05 with stable vehicle identity and a 64-bit skin-state mask.

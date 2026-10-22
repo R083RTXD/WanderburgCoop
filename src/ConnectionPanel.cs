@@ -18,6 +18,9 @@ public sealed class ConnectionPanel : MonoBehaviour
     private bool viewErrorLogged;
     private PlayerSnapshot local;
     private bool wasConnected;
+    private VP appearanceSource;
+    private uint appearanceId;
+    private float nextAppearanceSample;
 
     public ConnectionPanel(IntPtr pointer) : base(pointer) { }
 
@@ -93,6 +96,15 @@ public sealed class ConnectionPanel : MonoBehaviour
             // Sample the visual origin so the remote mesh has the same height
             // and facing as the displayed vehicle, not its separate rigidbody.
             var visual = vm.vp;
+            if (appearanceSource != visual || Time.unscaledTime >= nextAppearanceSample)
+            {
+                appearanceSource = visual;
+                uint sampled = VehicleModel.GetAppearance(visual);
+                if (sampled != appearanceId)
+                    SessionLog.LogInfo($"PID {Environment.ProcessId}: local appearance {sampled:X8} from {(visual ? visual.name : "none")}");
+                appearanceId = sampled;
+                nextAppearanceSample = Time.unscaledTime + 0.5f;
+            }
             Transform player = visual ? visual.transform : vm.rb ? vm.rb.transform : vm.transform;
             ulong skinMask = 0;
             if (visual && visual.myVehicleSkinElements != null)
@@ -104,7 +116,7 @@ public sealed class ConnectionPanel : MonoBehaviour
             var pos = player.position;
             var value = new PlayerSnapshot(true, scene, pos.x, pos.y, pos.z,
                 Mathf.Repeat(player.eulerAngles.y, 360),
-                VehicleModel.GetIdentity(visual), skinMask);
+                VehicleModel.GetIdentity(visual), skinMask, appearanceId);
             if (!value.IsValid) throw new InvalidOperationException("Player transform is outside supported bounds.");
             playerStatus = $"Lokal: X {pos.x:F1} / Z {pos.z:F1}";
             return value;
@@ -124,7 +136,7 @@ public sealed class ConnectionPanel : MonoBehaviour
     public void OnGUI()
     {
         float x = Math.Max(8, Screen.width - 408);
-        GUI.Box(new Rect(x, 8, 400, 376), "Wanderburg Co-op 0.5.0 - Fahrzeug-/Positionstest");
+        GUI.Box(new Rect(x, 8, 400, 376), "Wanderburg Co-op 0.5.2 - Fahrzeug-/Positionstest");
         GUI.Label(new Rect(x + 12, 38, 376, 25), connection.Status);
         GUI.Label(new Rect(x + 12, 64, 376, 25), $"Pakete: gesendet {connection.Sent} / empfangen {connection.Received}");
         if (!connection.Active)
