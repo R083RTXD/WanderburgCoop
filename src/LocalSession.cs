@@ -12,7 +12,7 @@ namespace WanderburgCoopTest;
 public sealed class LocalSession : IDisposable
 {
     private const int Port = 28714;
-    private const string Protocol = "WB06";
+    private const string Protocol = "WB07";
     private readonly Stopwatch clock = Stopwatch.StartNew();
     private UdpClient socket;
     private IPEndPoint peer;
@@ -25,6 +25,10 @@ public sealed class LocalSession : IDisposable
     private double lastStateReceive = double.NegativeInfinity;
     private long nextSequence;
     private long remoteSequence = -1;
+    private readonly VisualPoseAssembler poseAssembler = new();
+    private long nextPoseSequence;
+    private double lastPoseSend = -1;
+    private double lastPoseReceive = double.NegativeInfinity;
     public bool Connected { get; private set; }
     public bool Active => socket != null;
     public string Status { get; private set; } = "Bereit";
@@ -34,6 +38,10 @@ public sealed class LocalSession : IDisposable
     public int SessionSeed { get; private set; }
     public PlayerSnapshot LocalSnapshot { get; set; }
     public PlayerSnapshot RemoteSnapshot { get; private set; }
+    public VisualPoseFrame LocalPose { get; set; }
+    public VisualPoseFrame RemotePose { get; private set; }
+    public int PoseFramesReceived { get; private set; }
+    public bool HasFreshPose => Connected && clock.Elapsed.TotalSeconds - lastPoseReceive < 0.75;
     public bool HasFreshSnapshot => Connected && clock.Elapsed.TotalSeconds - lastStateReceive < 1.5;
 
     public void StartHost() => Start(true);
@@ -76,7 +84,7 @@ public sealed class LocalSession : IDisposable
             {
                 IPEndPoint sender = new(IPAddress.Any, 0);
                 byte[] bytes = socket.Receive(ref sender);
-                if (!IPAddress.IsLoopback(sender.Address) || bytes.Length > 256) continue;
+                if (!IPAddress.IsLoopback(sender.Address) || bytes.Length > 1200) continue;
                 string[] parts = Encoding.ASCII.GetString(bytes).Split('|');
                 if (parts.Length < 3 || parts[0] != Protocol || !Guid.TryParseExact(parts[2], "N", out _)) continue;
                 if (host && parts.Length == 3 && parts[1] == "HELLO" && peer == null)
@@ -90,9 +98,23 @@ public sealed class LocalSession : IDisposable
                     if (!Connected || !PlayerSnapshot.TryRead(parts, out long sequence, out var snapshot) ||
                         sequence <= remoteSequence) continue;
                     RemoteSnapshot = snapshot;
+                    if (!snapshot.InRun || RemotePose != null &&
+                        (RemotePose.Scene != snapshot.Scene || RemotePose.AppearanceId != snapshot.AppearanceId ||
+                         RemotePose.VehicleId != snapshot.VehicleId)) RemotePose = null;
                     remoteSequence = sequence;
                     lastStateReceive = lastReceive = clock.Elapsed.TotalSeconds;
                     SnapshotsReceived++;
+                    Received++;
+                    continue;
+                }
+                if (parts[1] == "POSE")
+                {
+                    if (!Connected || !RemoteSnapshot.InRun ||
+                        !poseAssembler.Accept(parts, out var pose) || pose.Scene != RemoteSnapshot.Scene ||
+                        pose.VehicleId != RemoteSnapshot.VehicleId || pose.AppearanceId != RemoteSnapshot.AppearanceId) continue;
+                    RemotePose = pose;
+                    lastPoseReceive = lastReceive = clock.Elapsed.TotalSeconds;
+                    PoseFramesReceived++;
                     Received++;
                     continue;
                 }
@@ -138,6 +160,13 @@ public sealed class LocalSession : IDisposable
                 Send("STATE", LocalSnapshot.ToPayload(nextSequence++));
                 lastStateSend = now;
             }
+            if (Connected && LocalSnapshot.InRun && LocalPose?.IsValid == true &&
+                LocalPose.Scene == LocalSnapshot.Scene && LocalPose.VehicleId == LocalSnapshot.VehicleId &&
+                LocalPose.AppearanceId == LocalSnapshot.AppearanceId && now - lastPoseSend >= 0.05)
+            {
+                foreach (string payload in LocalPose.ToPayloads(nextPoseSequence++)) Send("POSE", payload);
+                lastPoseSend = now;
+            }
         }
         catch (SocketException ex)
         {
@@ -179,6 +208,12 @@ public sealed class LocalSession : IDisposable
         SnapshotsReceived = 0;
         SessionSeed = 0;
         RemoteSnapshot = default;
+        LocalPose = RemotePose = null;
+        poseAssembler.Reset();
+        nextPoseSequence = 0;
+        lastPoseSend = -1;
+        lastPoseReceive = double.NegativeInfinity;
+        PoseFramesReceived = 0;
     }
 
     public void Dispose() => Disconnect();

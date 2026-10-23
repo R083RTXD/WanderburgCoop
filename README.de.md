@@ -1,114 +1,83 @@
-# Wanderburg Multiplayer / Co-op Mod — WIP Position Tests
+# Wanderburg Multiplayer / Co-op Mod — WIP Positions- und Darstellungstests
 
-**TEST / IN ENTWICKLUNG — bisher nur Positionstests. Noch kein spielbarer Mehrspieler-Koop.**
+**TEST / IN ENTWICKLUNG — NOCH KEIN SPIELBARER MEHRSPIELER-KOOP.**
 
-**TEST / WORK IN PROGRESS — position tests only. Not playable multiplayer co-op.**
+[English guide](README.md) · [Versionsarchiv](versions/README.md) · [Changelog](CHANGELOG.md) · [MIT-Lizenz](LICENSE)
 
-[English guide](README.md) · [Versionsarchiv](versions/README.md) · [Entwicklungsverlauf](CHANGELOG.md) · [MIT-Lizenz](LICENSE)
+Inoffizieller Mod von **R083RTXD**. Zuletzt vom Nutzer getestet: **0.6.9**
+(23.10.2026). Für Wanderburg **0.9.14b**, Windows x64, Unity 6000.0.63f1 und
+BepInEx 6.0.0-be.789 Unity IL2CPP. Spätere ungetestete Arbeiten sind nicht enthalten.
 
-Ein inoffizieller, experimenteller BepInEx-Mod für Wanderburg von **R083RTXD**.
-Das Repository zeigt die Entwicklung einschließlich fehlgeschlagener Versuche.
-Aktueller Fahrzeug-Darstellungstest: **0.5.2**, für Wanderburg **0.9.14b**, Windows x64,
-Unity 6000.0.63f1 und BepInEx 6.0.0-be.789 (Unity IL2CPP).
+## Mit zwei Instanzen bestätigt
 
-## Was bisher funktioniert
+- Verbindung auf **demselben Windows-PC** per UDP `127.0.0.1:28714`.
+- Position, Richtung, Burgdarstellung und Rad-/Spinnenbeinposen werden übertragen.
+  Normale Burg und Spinnenburg getestet; andere gesperrte Modelle sind ungeprüft.
+- Animationen funktionieren seit 0.6.3; mit 0.6.7 sinken entfernte Beine nicht mehr ein.
+- Burg bleibt beim Nitro sichtbar; **Nitro-Effekte fehlen weiterhin**.
+- Nach Moduleinbau bleibt die bekannte Burg sichtbar. **Neue Modulmodelle fehlen**.
+  `Burg (Ausbau offen)` bedeutet, dass das Aussehen veraltet sein kann.
+- Hintergrundnetzwerk übersteht Ladepausen. Nach Schließen von Host oder Client
+  bleibt die andere Instanz im Nutzertest an. F8 gibt die Maus frei.
+- Host-Seed wird bei Verbindung vor dem Laden vor MapGenerator.Awake gesetzt.
+  Identische gesamte Gelände-/Kollisionsdaten sind damit noch nicht bestätigt.
 
-- Zwei Instanzen auf **demselben Windows-PC** verbinden sich über UDP `127.0.0.1:28714`.
-- Position und Blickrichtung werden übertragen. 0.5.2 versucht, die Fahrzeugmeshes
-  und aktiven Ausbaustufen des Gegenübers darzustellen; die türkise Figur bleibt als Fallback.
-- Die Bewegung der Testfigur wurde in beiden Spielinstanzen manuell bestätigt.
-- Der Host überträgt einen gemeinsamen Karten-Seed; gleiche Seeds wurden manuell bestätigt.
-- Ein Hintergrund-Thread hält die Netzwerkverbindung auch während Unity-Ladepausen aufrecht.
-- F8 gibt die Maus vorübergehend zum Fensterwechsel frei.
+## Bekannte Fehler und fehlende Spielmechanik
 
-Ein gleicher Seed bedeutet **keine gemeinsam simulierte Welt**.
-Fahrzeug-Spielmechanik, Gegner, Kämpfe, Schaden, Beute, XP, Upgrades
-und gemeinsamer Fortschritt sind **noch nicht synchronisiert**.
-Internetverbindungen, LAN-Suche, Einladungscodes, NAT-Durchquerung und
-Steam-Lobbys sind **nicht implementiert**. Die Tests laufen lokal auf einem PC.
+**Spuren in 0.6.9 sind NICHT korrekt.** Originalgrafik wird geladen, aber
+Spinnenabdrücke sitzen zu nah am Körper und sammeln sich an. Der kurze Staub-/
+Wachstumseffekt des Originals wird nicht nachgebildet. Normale Radspuren sind
+zu lang und gepunktet. Das sind rein optische Versuche.
 
-## Bekannte Fehler und Prüfstand
+Bei unbekanntem Anfangsmodell bleibt gegebenenfalls die türkise Figur.
+Das Behalten einer bekannten Burg beim Ausbau ist ein Ersatzverfahren, keine
+vollständige Modulsynchronisierung. Teilweise passende Animationsknoten sind dabei bekannt.
 
-Am 22.10.2026 hat der Nutzer bestätigt: Mit 0.4.6 läuft nach dem Schließen von
-Host oder Client die andere Instanz weiter. 0.5.2 behält diesen Fokusschutz bei.
+Gegner, Angriffe, Waffen, Schaden, Lebenspunkte, Beute, XP, Ausbauten und Fortschritt
+laufen getrennt. Es gibt **keine gemeinsam autoritative Welt**.
+Internet-/LAN-Suche, Einladungscodes, NAT-Verbindung und Steam-Lobbys fehlen.
+Aktuell ist dies ein Loopback-Prototyp für einen PC, noch kein gemeinsamer Kampfmodus.
 
-**0.5.0 zeigte einen normalen Burgkörper mit Spinnenbeinen.** 0.5.2 überträgt
-zusätzlich eine Kennung der sichtbaren Meshes/Materialien und verwendet nur ein
-passendes laufendes oder geladenes Modell. Der richtige Körper wurde mit 0.5.1
-vom Nutzer bestätigt; dort fehlten die ausgelagerten Spinnenbeine, während die
-normale Burg samt Rädern sichtbar war. 0.5.2 übernimmt zusätzlich die zugehörigen
-Beinobjekte. Am 22.10.2026 hat der Nutzer bestätigt: Der richtige Spinnenburgkörper
-und die Beine sind jetzt sichtbar und funktionieren im Test mit zwei Instanzen.
-Die Beine bleiben statisch; Animationen sind noch nicht implementiert.
-Fehlt ein passendes Aussehen, bleibt die türkise Figur.
-Es werden
-nur statische Meshes und Materialien übernommen. Räder, Waffenanimationen,
-angebaute Module, Besatzung und Dekoration werden nicht separat synchronisiert.
-Für unbekannte Modelle bleibt die Testfigur sichtbar. Beide Instanzen müssen
-0.5.2 für übereinstimmende Körper-/Beinkennungen nutzen. WB06 ist nicht mit
-WB04/WB05 kompatibel. Die Zustandsmaske unterstützt
-die ersten 64 Einträge der Ausbaustufen-Liste eines Fahrzeugs.
+**Gefundene Spielstand-Schreibmethoden sind blockiert. Test-Fortschritt wird
+NICHT gespeichert. Vor normalem Spielen den Mod entfernen und Spielstände sichern.**
+Keine Freischaltungen werden verändert. Spielassets/Abhängigkeiten werden nicht mitgeliefert.
 
-Der Mod kompiliert ohne Fehler/Warnungen. 67 verwaltete Netzwerk- und Regeltests
-bestehen, einschließlich Modellkennung, Stufenwechsel und Abweisung alter Protokolle.
-Diese Tests prüfen weder Unity-Darstellung noch die native Spielausführung.
+## Installation
 
-Der Entwicklungsmod blockiert die gefundenen Spielstand-Schreibmethoden.
-**Test-Fortschritt wird nicht gespeichert. Für normales Spielen den Mod entfernen.**
-Alte Pakete und ihre Anleitungen bleiben als historische Stände erhalten.
-Frühere Aussagen zur Absturzbehebung sind durch diesen Prüfstand überholt.
-
-## Installation und lokaler Positionstest
-
-1. Passendes **BepInEx 6 Unity IL2CPP x64** installieren und das Spiel einmal
-   starten, damit die Interop-Dateien erzeugt werden.
-2. Ein Test-ZIP aus dem [Versionsarchiv](versions/README.md) herunterladen.
-3. Alle Spielinstanzen schließen und nur `WanderburgCoopTest.dll` nach
-   `BepInEx/plugins/` kopieren. Alte Kopie ersetzen; keine Versionen parallel installieren.
-4. Zwei Spielinstanzen normal starten. Im aktuellen Fenster muss **0.5.2** stehen.
-   Keine unsichtbaren Starttests mit `-batchmode -nographics` verwenden.
-5. Im Hauptmenü einmal **Host erstellen** und in der anderen Instanz
-   **Lokal beitreten** wählen. Die Verbindung abwarten.
-6. In beiden Instanzen dasselbe Biom starten. **Vor** dem Laden verbinden,
-   damit der gemeinsame Seed vor der Kartenerzeugung feststeht.
-7. Nach der türkisen Testfigur schauen. F8 gibt die Maus vorübergehend frei.
-
-Spiel, BepInEx und Abhängigkeiten müssen separat installiert werden.
-Das Repository enthält keine Spieldateien, extrahierten Assets, erzeugten
-Spiel-Assemblies, Spielstände, privaten Logs oder Crashdumps.
+1. Passendes BepInEx 6 Unity IL2CPP x64 installieren und das Spiel einmal starten,
+   damit Interop-Dateien entstehen. Spiel und Loader separat installieren.
+2. [Erhaltenes Test-ZIP 0.6.9](versions/packages/WanderburgCoop-0.6.9-footprint-art.zip) herunterladen.
+3. Alle Spiele schließen. Nur `WanderburgCoopTest.dll` nach `BepInEx/plugins/`
+   kopieren und alte DLL ersetzen. Nur eine Version installieren.
+4. Beide Spiele normal starten; **beide müssen 0.6.9 anzeigen**.
+   Keine unsichtbaren `-batchmode -nographics`-Starttests verwenden.
+5. Im Hauptmenü einmal **Host erstellen**, im zweiten Spiel **Lokal beitreten**.
+   Verbindung abwarten, danach dieselbe Landschaft laden.
+6. Entfernte Burg beobachten. `Posen` zählt Animationsframes;
+   `Animation: Knoten` zeigt zugeordnete Knoten. Spuren bleiben experimentell.
+7. F8 gibt die Maus frei. Die obigen Grenzen sind bekannt; dies ist kein fertiger Koop.
 
 ## Selbst bauen
 
-.NET 10 SDK installieren. Der Mod verwendet .NET 6, die reine Testsuite .NET 10.
-Zum Kompilieren des Mods wird eine lokale Spielinstallation mit den von
-BepInEx erzeugten Interop-Dateien benötigt.
+.NET 10 SDK installieren. Mod-Ziel: .NET 6; verwaltete Tests: .NET 10.
+Kompilierung benötigt Interop-Assemblies der eigenen Spielinstallation.
 
 ```powershell
 ./build.ps1 -GameRoot 'D:/SteamLibrary/steamapps/common/Wanderburg Game'
-```
-
-Nur die verwalteten Tests ausführen, ohne Spielinstallation:
-
-```powershell
 dotnet run --project ./tests/ConnectionChecks.csproj -c Release
 ```
 
-Das Buildskript erzeugt ein Installations-ZIP unter `artifacts/`.
-Keine Spiel-Assemblies oder extrahierten Inhalte hochladen.
+0.6.9 kompiliert ohne Warnungen/Fehler; **121 verwaltete Prüfungen** bestehen.
+Sie prüfen weder native Darstellung noch Kollision oder komplette Spielmechanik.
+Das Buildskript erstellt ein Installations-ZIP unter `artifacts/`.
 
-## Entwicklungsarchiv und Mitarbeit
+## Entwicklung und Lizenz
 
-Das [Versionsarchiv](versions/README.md) enthält alle erhaltenen Installationspakete
-und Quellcode-Snapshots. 0.1.0–0.3.0 sind im Changelog dokumentiert;
-vollständige Originalarchive dieser Versionen liegen nicht mehr vor.
+[Das Archiv](versions/README.md) enthält erhaltene Installationspakete, verfügbare
+Quellcode-Snapshots, tatsächliche Testergebnisse und SHA256-Prüfsummen. Fehlende
+historische Quellen werden benannt; Git-Historie wird nicht erfunden. Anleitungen
+in alten ZIPs sind historische Stände und können überholte Aussagen enthalten.
 
-Fehlerberichte und Codebeiträge sind willkommen. Spiel-, Loader- und Mod-Version,
-die Schritte zum Nachstellen und die betroffene Rolle (Host/Client) angeben.
-Persönliche Pfade vor dem Teilen von Logauszügen entfernen.
-
-## Lizenz
-
-Eigener Mod-Code: [MIT](LICENSE). Spielinhalte, Marken und separat installierte
-Abhängigkeiten unterliegen ihren eigenen Bedingungen; siehe
-[Dritthinweise](THIRD_PARTY_NOTICES.md). Das Projekt wird nicht offiziell
-von den Spieleentwicklern unterstützt.
+Eigener Mod-Code: MIT. [Drittanbieterhinweise](THIRD_PARTY_NOTICES.md).
+Keine Spieldateien, extrahierten Grafiken, Interop-Assemblies, Spielstände,
+privaten Logs oder Crashdumps enthalten.

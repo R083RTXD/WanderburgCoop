@@ -16,9 +16,12 @@ public sealed class ConnectionInfo
     public PlayerSnapshot RemoteSnapshot { get; }
     public bool HasFreshSnapshot { get; }
     public string Error { get; }
+    public VisualPoseFrame RemotePose { get; }
+    public int PoseFramesReceived { get; }
 
     public ConnectionInfo(bool active, bool connected, string status, int received,
-        int sent, int snapshotsReceived, int sessionSeed, PlayerSnapshot remoteSnapshot, bool hasFreshSnapshot, string error = null)
+        int sent, int snapshotsReceived, int sessionSeed, PlayerSnapshot remoteSnapshot, bool hasFreshSnapshot, string error = null,
+        VisualPoseFrame remotePose = null, int poseFramesReceived = 0)
     {
         Active = active;
         Connected = connected;
@@ -30,6 +33,8 @@ public sealed class ConnectionInfo
         RemoteSnapshot = remoteSnapshot;
         HasFreshSnapshot = hasFreshSnapshot;
         Error = error;
+        RemotePose = remotePose;
+        PoseFramesReceived = poseFramesReceived;
     }
 }
 
@@ -42,6 +47,8 @@ public sealed class BackgroundConnection : IDisposable
     private readonly object snapshotGate = new();
     private PlayerSnapshot localSnapshot;
     private long snapshotPublishedAt;
+    private VisualPoseFrame localPose;
+    private long posePublishedAt;
     private ConnectionInfo info = ConnectionInfo.Idle;
     private int command = -1;
     private int stopping;
@@ -72,6 +79,15 @@ public sealed class BackgroundConnection : IDisposable
         }
     }
 
+    public void PublishPose(VisualPoseFrame pose)
+    {
+        lock (snapshotGate)
+        {
+            localPose = pose;
+            posePublishedAt = Stopwatch.GetTimestamp();
+        }
+    }
+
     private void Run()
     {
         using var session = new LocalSession();
@@ -93,11 +109,14 @@ public sealed class BackgroundConnection : IDisposable
                     if ((Stopwatch.GetTimestamp() - snapshotPublishedAt) / (double)Stopwatch.Frequency > 0.75)
                         snapshot = snapshot with { InRun = false };
                     session.LocalSnapshot = snapshot;
+                    session.LocalPose = (Stopwatch.GetTimestamp() - posePublishedAt) /
+                        (double)Stopwatch.Frequency <= 0.75 ? localPose : null;
                 }
                 session.Tick();
                 Volatile.Write(ref info, new ConnectionInfo(session.Active, session.Connected, session.Status,
                     session.Received, session.Sent, session.SnapshotsReceived, session.SessionSeed,
-                    session.RemoteSnapshot, session.HasFreshSnapshot));
+                    session.RemoteSnapshot, session.HasFreshSnapshot, remotePose: session.HasFreshPose ? session.RemotePose : null,
+                    poseFramesReceived: session.PoseFramesReceived));
                 Thread.Sleep(10);
             }
             session.Disconnect();

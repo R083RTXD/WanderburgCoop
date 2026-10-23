@@ -9,6 +9,12 @@ internal sealed class VehicleModel : IDisposable
 {
     private readonly List<Mesh> bakedMeshes = new();
     private readonly Dictionary<int, Transform> transforms = new();
+    private readonly Dictionary<uint, Transform> poseTargets = new();
+    internal readonly record struct GroundContact(Transform Transform, bool Foot, Renderer[] Soles = null);
+    internal readonly List<GroundContact> GroundContacts = new();
+    internal GameObject FootprintPrefab { get; private set; }
+    private bool poseInitialized;
+    public int AnimatedNodeCount => poseTargets.Count;
     private Transform visualRoot;
     private VP cachedSource;
     private float nextScan;
@@ -32,8 +38,116 @@ internal sealed class VehicleModel : IDisposable
 
     private readonly record struct VisualPart(Renderer Renderer, Mesh Mesh, Transform Boundary, string Category);
 
+    internal readonly record struct PoseSource(uint Id, Transform Transform, bool VehicleRelative,
+        bool OwnerFrame = false, Renderer[] Soles = null);
+
+    private static List<GroundContact> GetGroundContacts(VP vehicle)
+    {
+        var result = new List<GroundContact>();
+        var seen = new HashSet<int>();
+        var feedback = vehicle.df;
+        if (!feedback) return result;
+        var parts = GetParts(vehicle);
+        void Add(Transform t, bool foot, Renderer[] soles = null)
+        {
+            if (t && result.Count < 16 && seen.Add(t.GetInstanceID())) result.Add(new(t, foot, soles));
+        }
+        void AddFoot(DitzelGames.FastIK.FastIKFabric leg)
+        {
+            if (!leg || !leg.Target) return;
+            // The game's IK endpoint has a ~5-unit graphical offset. Use only
+            // that detached leg's renderers to measure its visible lower edge;
+            // never use the body's bounds or relax terrain collision checks.
+            var soles = parts.Where(p => p.Category != "body" && IsUnder(leg.transform, p.Boundary))
+                .Select(p => p.Renderer).ToArray();
+            Add(leg.Target, true, soles);
+        }
+        if (feedback.spc && feedback.spc.myLegs != null)
+            foreach (var leg in feedback.spc.myLegs) AddFoot(leg);
+        if (feedback.spc2 && feedback.spc2.myLegs != null)
+            foreach (var leg in feedback.spc2.myLegs) AddFoot(leg);
+        if (result.Count == 0)
+        {
+            if (feedback.leftSideWheels != null) foreach (var t in feedback.leftSideWheels) Add(t, false);
+            if (feedback.rightSideWheels != null) foreach (var t in feedback.rightSideWheels) Add(t, false);
+        }
+        return result;
+    }
+
+    internal static List<PoseSource> GetPoseSources(VP vehicle)
+    {
+        var result = new List<PoseSource>
+        {
+            new(VehicleIdentity.VisualRootId, vehicle.transform, false, true)
+        };
+        var seen = new HashSet<int>();
+        var parts = GetParts(vehicle);
+        foreach (var part in parts)
+        {
+            AddChain(part.Renderer.transform, part.Boundary, part.Category);
+            var skinned = part.Renderer.TryCast<SkinnedMeshRenderer>();
+            if (skinned == null) continue;
+            foreach (var bone in skinned.bones) if (bone) AddChain(bone, part.Boundary, part.Category);
+            if (skinned.rootBone) AddChain(skinned.rootBone, part.Boundary, part.Category);
+        }
+        // IK targets can live outside the render hierarchy. Sample them in the
+        // vehicle frame under dedicated IDs; do not treat the solver bone tip
+        // (observed five units above terrain) as a planted foot contact.
+        var contacts = GetGroundContacts(vehicle);
+        for (int i = 0; i < contacts.Count; i++)
+            result.Add(new PoseSource(VehicleIdentity.FromGroundContact(i, contacts[i].Foot),
+                contacts[i].Transform, true, Soles: contacts[i].Soles));
+        return result;
+
+        void AddChain(Transform transform, Transform boundary, string category)
+        {
+            if (!IsUnder(transform, boundary)) return;
+            for (var node = transform; node && node != vehicle.transform; node = node.parent)
+            {
+                if (seen.Add(node.GetInstanceID()))
+                {
+                    var path = new List<string>();
+                    for (var p = node; p && p != boundary; p = p.parent)
+                        path.Add(p.name + "#" + p.GetSiblingIndex());
+                    uint id = VehicleIdentity.FromModuleId("pose:" + category + "/" + string.Join("/", path));
+                    result.Add(new PoseSource(id, node, node == boundary));
+                }
+                if (node == boundary) break;
+            }
+        }
+    }
+
+    private static bool IsUnder(Transform transform, Transform boundary)
+    {
+        for (var node = transform; node; node = node.parent) if (node == boundary) return true;
+        return false;
+    }
+
+    public int ApplyPose(VisualPoseFrame frame)
+    {
+        if (frame == null) return 0;
+        float blend = poseInitialized ? 1 - Mathf.Exp(-25 * Time.unscaledDeltaTime) : 1;
+        int applied = 0;
+        foreach (var pose in frame.Nodes)
+        {
+            if (!poseTargets.TryGetValue(pose.Id, out var target) || !target) continue;
+            target.localPosition = Vector3.Lerp(target.localPosition, new Vector3(pose.X, pose.Y, pose.Z), blend);
+            target.localRotation = Quaternion.Slerp(target.localRotation,
+                new Quaternion(pose.Qx, pose.Qy, pose.Qz, pose.Qw).normalized, blend);
+            target.localScale = Vector3.Lerp(target.localScale, new Vector3(pose.Sx, pose.Sy, pose.Sz), blend);
+            applied++;
+        }
+        if (!poseInitialized) Log.LogInfo($"PID {Environment.ProcessId}: first animation pose matched {applied}/{frame.Nodes.Count} nodes.");
+        poseInitialized = true;
+        return applied;
+    }
+
     private static List<VisualPart> GetParts(VP vehicle)
     {
+        // Nitro is a transient VFX branch, not a different vehicle skin. Its
+        // active mesh renderers must not change identity or the animation rig.
+        var boostGroup = vehicle.df ? vehicle.df.boostVFXgroup : null;
+        Transform boostRoot = boostGroup ? boostGroup.transform : null;
         var roots = new List<(Transform root, string category)> { (vehicle.transform, "body") };
         var feedback = vehicle.df;
         if (feedback)
@@ -56,11 +170,13 @@ internal sealed class VehicleModel : IDisposable
             {
                 var renderer = filter.GetComponent<MeshRenderer>();
                 if (renderer && renderer.enabled && filter.sharedMesh && IsVisible(filter.transform, root) &&
+                    (!boostRoot || !IsUnder(filter.transform, boostRoot)) &&
                     seen.Add(renderer.GetInstanceID()))
                     result.Add(new VisualPart(renderer, filter.sharedMesh, root, category));
             }
             foreach (var renderer in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
                 if (renderer.enabled && renderer.sharedMesh && IsVisible(renderer.transform, root) &&
+                    (!boostRoot || !IsUnder(renderer.transform, boostRoot)) &&
                     seen.Add(renderer.GetInstanceID()))
                     result.Add(new VisualPart(renderer, renderer.sharedMesh, root, category));
         }
@@ -112,6 +228,10 @@ internal sealed class VehicleModel : IDisposable
             if (!source) return false;
         }
         cachedSource = source;
+        var feedback = source.df;
+        FootprintPrefab = feedback && feedback.spc2 ? feedback.spc2.stepEffectPrefab :
+            feedback && feedback.spc ? feedback.spc.stepEffectPrefab : null;
+        if (!FootprintPrefab && feedback && feedback.spc) FootprintPrefab = feedback.spc.stepEffectPrefab;
 
         var sourceScale = source.transform.lossyScale;
         if (Math.Abs(sourceScale.x) < 0.000001f || Math.Abs(sourceScale.y) < 0.000001f ||
@@ -129,30 +249,65 @@ internal sealed class VehicleModel : IDisposable
         {
             var renderer = part.Renderer;
             Transform target = CopyTransform(renderer.transform, source.transform, part.Boundary);
-            var meshFilter = target.gameObject.AddComponent<MeshFilter>();
             var skinned = renderer.TryCast<SkinnedMeshRenderer>();
-            if (skinned != null)
+            bool canSkin = skinned != null && skinned.bones.Length > 0 &&
+                skinned.bones.All(b => b && IsUnder(b, part.Boundary)) &&
+                (!skinned.rootBone || IsUnder(skinned.rootBone, part.Boundary));
+            Renderer meshRenderer;
+            if (canSkin)
             {
-                var mesh = new Mesh();
-                bakedMeshes.Add(mesh);
-                skinned.BakeMesh(mesh);
-                meshFilter.sharedMesh = mesh;
+                var copy = target.gameObject.AddComponent<SkinnedMeshRenderer>();
+                copy.sharedMesh = skinned.sharedMesh;
+                var bones = new Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray<Transform>(skinned.bones.Length);
+                for (int i = 0; i < bones.Length; i++)
+                    bones[i] = CopyTransform(skinned.bones[i], source.transform, part.Boundary);
+                copy.bones = bones;
+                if (skinned.rootBone) copy.rootBone = CopyTransform(skinned.rootBone, source.transform, part.Boundary);
+                copy.localBounds = skinned.localBounds;
+                copy.updateWhenOffscreen = true;
+                meshRenderer = copy;
             }
-            else meshFilter.sharedMesh = part.Mesh;
-            var meshRenderer = target.gameObject.AddComponent<MeshRenderer>();
+            else
+            {
+                var meshFilter = target.gameObject.AddComponent<MeshFilter>();
+                if (skinned != null)
+                {
+                    var mesh = new Mesh();
+                    bakedMeshes.Add(mesh);
+                    skinned.BakeMesh(mesh);
+                    meshFilter.sharedMesh = mesh;
+                }
+                else meshFilter.sharedMesh = part.Mesh;
+                meshRenderer = target.gameObject.AddComponent<MeshRenderer>();
+            }
             meshRenderer.sharedMaterials = renderer.sharedMaterials;
             meshRenderer.shadowCastingMode = renderer.shadowCastingMode;
             meshRenderer.receiveShadows = renderer.receiveShadows;
             count++;
             if (part.Category != "body") legCount++;
         }
+        GroundContacts.Clear();
+        var sourceContacts = GetGroundContacts(source);
+        for (int i = 0; i < sourceContacts.Count; i++)
+        {
+            var contact = sourceContacts[i];
+            var anchor = new GameObject("GroundContact_" + i) { layer = 2 };
+            anchor.transform.SetParent(visualRoot, false);
+            anchor.transform.localPosition = source.transform.InverseTransformPoint(contact.Transform.position);
+            GroundContacts.Add(new(anchor.transform, contact.Foot));
+        }
+        poseTargets.Clear();
+        foreach (var node in GetPoseSources(source))
+            if (transforms.TryGetValue(node.Transform.GetInstanceID(), out var target)) poseTargets[node.Id] = target;
+        for (int i = 0; i < GroundContacts.Count; i++)
+            poseTargets[VehicleIdentity.FromGroundContact(i, GroundContacts[i].Foot)] = GroundContacts[i].Transform;
         transforms.Clear();
         if (count == 0)
         {
             Object.Destroy(visual);
             return false;
         }
-        Log.LogInfo($"PID {Environment.ProcessId}: visual vehicle {remote.VehicleId:X8}, appearance {remote.AppearanceId:X8}, {count} meshes ({legCount} detached leg meshes) from {source.name}, live={source.gameObject.scene.IsValid()}");
+        Log.LogInfo($"PID {Environment.ProcessId}: visual vehicle {remote.VehicleId:X8}, appearance {remote.AppearanceId:X8}, {count} meshes ({legCount} detached leg meshes), {poseTargets.Count} animation nodes from {source.name}, live={source.gameObject.scene.IsValid()}");
         return true;
     }
 
@@ -202,6 +357,10 @@ internal sealed class VehicleModel : IDisposable
         foreach (var mesh in bakedMeshes) if (mesh) Object.Destroy(mesh);
         bakedMeshes.Clear();
         transforms.Clear();
+        poseTargets.Clear();
+        GroundContacts.Clear();
+        poseInitialized = false;
+        FootprintPrefab = null;
         visualRoot = null;
     }
 

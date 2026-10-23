@@ -4,6 +4,9 @@ namespace WanderburgCoopTest;
 // IDs select locally loaded assets only. The network never supplies asset paths.
 public static class VehicleIdentity
 {
+    public static readonly uint VisualRootId = FromModuleId("visual-root-frame:v1");
+    public static uint FromGroundContact(int index, bool foot) => index is >= 0 and < 16
+        ? FromModuleId("ground-contact:" + (foot ? "foot:" : "wheel:") + index.ToString(System.Globalization.CultureInfo.InvariantCulture)) : 0;
     public static uint FromAppearance(IEnumerable<string> visibleParts)
     {
         var parts = visibleParts.OrderBy(value => value, StringComparer.Ordinal).ToArray();

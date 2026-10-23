@@ -21,6 +21,9 @@ public sealed class ConnectionPanel : MonoBehaviour
     private VP appearanceSource;
     private uint appearanceId;
     private float nextAppearanceSample;
+    private readonly VisualPoseSampler poseSampler = new();
+    private float nextPoseSample;
+    private bool poseErrorLogged;
 
     public ConnectionPanel(IntPtr pointer) : base(pointer) { }
 
@@ -67,7 +70,32 @@ public sealed class ConnectionPanel : MonoBehaviour
         if (connection.Error != null) SessionLog.LogError(connection.Error);
     }
 
-    public void LateUpdate() => LocalTestFocus.Apply();
+    public void LateUpdate()
+    {
+        LocalTestFocus.Apply();
+        if (Time.unscaledTime < nextPoseSample) return;
+        nextPoseSample = Time.unscaledTime + 0.05f;
+        if (!connection.Connected || !local.InRun)
+        {
+            poseSampler.Capture(null, default);
+            session.PublishPose(null);
+            return;
+        }
+        try
+        {
+            var vehicle = GM.gm && GM.gm.vm ? GM.gm.vm.vp : null;
+            session.PublishPose(poseSampler.Capture(vehicle, local));
+        }
+        catch (Exception ex)
+        {
+            session.PublishPose(null);
+            if (!poseErrorLogged)
+            {
+                SessionLog.LogError($"Visual pose sampling failed: {ex}");
+                poseErrorLogged = true;
+            }
+        }
+    }
 
     private void ToggleMouse()
     {
@@ -136,7 +164,7 @@ public sealed class ConnectionPanel : MonoBehaviour
     public void OnGUI()
     {
         float x = Math.Max(8, Screen.width - 408);
-        GUI.Box(new Rect(x, 8, 400, 376), "Wanderburg Co-op 0.5.2 - Fahrzeug-/Positionstest");
+        GUI.Box(new Rect(x, 8, 400, 454), "Wanderburg Co-op 0.6.9 - Abdruckgrafik");
         GUI.Label(new Rect(x + 12, 38, 376, 25), connection.Status);
         GUI.Label(new Rect(x + 12, 64, 376, 25), $"Pakete: gesendet {connection.Sent} / empfangen {connection.Received}");
         if (!connection.Active)
@@ -162,10 +190,13 @@ public sealed class ConnectionPanel : MonoBehaviour
         GUI.Label(new Rect(x + 12, 166, 376, 25), remoteStatus);
         GUI.Label(new Rect(x + 12, 192, 376, 25), $"Positionspakete: {connection.SnapshotsReceived} | Figur: {(remoteView.Visible ? "sichtbar" : "aus")}");
         GUI.Label(new Rect(x + 12, 218, 376, 25), $"Weltsamen: {(connection.SessionSeed > 0 ? connection.SessionSeed : 0)}");
-        GUI.Label(new Rect(x + 12, 244, 376, 25), "Darstellung: " + remoteView.Representation);
+        GUI.Label(new Rect(x + 12, 244, 376, 25), $"{remoteView.Representation} | Posen: {connection.PoseFramesReceived}");
         GUI.Label(new Rect(x + 12, 270, 376, 25), "TESTMODUS: Run-Fortschritt wird nicht gespeichert.");
-        GUI.Label(new Rect(x + 12, 296, 376, 25), "Gleicher Welt-Seed; Gegner/Kampf noch getrennt.");
-        if (GUI.Button(new Rect(x + 12, 328, 372, 30),
+        GUI.Label(new Rect(x + 12, 296, 376, 25), $"Animation: {remoteView.AnimationStatus}");
+        GUI.Label(new Rect(x + 12, 322, 376, 25), $"Aufnahme: {poseSampler.Status}");
+        GUI.Label(new Rect(x + 12, 348, 376, 25), $"Spuren: {remoteView.GroundMarksStatus}");
+        GUI.Label(new Rect(x + 12, 374, 376, 25), "Gleicher Welt-Seed; Gegner/Kampf noch getrennt.");
+        if (GUI.Button(new Rect(x + 12, 406, 372, 30),
             LocalTestFocus.FreeMouse ? "F8: Maus frei (umschalten)" : "F8: Maus freigeben")) ToggleMouse();
     }
 

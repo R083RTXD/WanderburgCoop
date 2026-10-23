@@ -10,7 +10,9 @@ the user confirmed that either peer survives closing the other with 0.4.6.
 Vehicle rendering was tested: 0.5.1 has the correct castle body, but spider legs
 were missing. Normal castle wheels are present. 0.5.2 adds detached leg objects;
 the user confirmed the correct spider body and visible legs on 2026-10-22.
-Animations are still missing. This remains a position/visual test, not playable co-op.
+Animations were confirmed in0.6.3; leg height in0.6.7; upgrade retention and
+visible placeholder marks in0.6.8. Latest tested0.6.9 still has misplaced spider
+effects, incorrect effect timing and overly long/dotted wheel tracks. It is not playable co-op.
 The original documentation inside older ZIPs may contain superseded conclusions.
 
 Dies sind die erhaltenen Originalpakete der Entwicklung einschließlich fehlgeschlagener
@@ -19,7 +21,9 @@ Am 22.10.2026 hat der Nutzer das getrennte Beenden mit 0.4.6 in beiden Richtunge
 Der richtige Burgkörper wurde mit 0.5.1 bestätigt, Spinnenbeine fehlten jedoch.
 Die normale Burg samt Rädern ist sichtbar. 0.5.2 ergänzt ausgelagerte Beinobjekte;
 der Nutzer hat den richtigen Körper und sichtbare Beine am 22.10.2026 bestätigt.
-Animationen fehlen weiterhin. Es bleibt ein Positions-/Darstellungstest ohne spielbaren Koop.
+Animationen seit0.6.3, Beinhöhe seit0.6.7 und Modellerhalt/erste Abdrücke seit0.6.8
+bestätigt. Zuletzt getestet0.6.9: Spinneneffekte versetzt, Ablauf falsch,
+Radspuren zu lang/gepunktet. Weiterhin kein spielbarer Koop.
 Anleitungen in älteren ZIPs können inzwischen widerlegte Aussagen enthalten.
 
 | Version | Development step / Entwicklungsschritt | Original package / Originalpaket | Source snapshot / Quellcode |
@@ -39,12 +43,22 @@ Anleitungen in älteren ZIPs können inzwischen widerlegte Aussagen enthalten.
 | 0.5.0 | Static vehicle visual test / Statischer Fahrzeug-Darstellungstest | [ZIP](packages/WanderburgCoop-0.5.0-vehicle-visual-test.zip) | [ZIP](source/WanderburgCoop-source-0.5.0.zip) |
 | 0.5.1 | Correct body matching / Richtige Körperzuordnung | [ZIP](packages/WanderburgCoop-0.5.1-body-matching-test.zip) | [ZIP](source/WanderburgCoop-source-0.5.1.zip) |
 | 0.5.2 | Detached spider legs / Ausgelagerte Spinnenbeine | [ZIP](packages/WanderburgCoop-0.5.2-spider-leg-test.zip) | [ZIP](source/WanderburgCoop-source-0.5.2.zip) |
+| 0.6.0 | Pose transport; scale rejection / Posen verworfen | [ZIP](packages/WanderburgCoop-0.6.0-animation-test.zip) | [ZIP](source/WanderburgCoop-source-0.6.0.zip) |
+| 0.6.1 | Receiver diagnosis, no animation / Empfangsdiagnose | [ZIP](packages/WanderburgCoop-0.6.1-pose-diagnosis.zip) | Not separately preserved / Nicht separat erhalten |
+| 0.6.2 | Capture diagnosis / Aufnahmediagnose | [ZIP](packages/WanderburgCoop-0.6.2-capture-diagnosis.zip) | Not separately preserved / Nicht separat erhalten |
+| 0.6.3 | Animation confirmed / Animationen bestätigt | [ZIP](packages/WanderburgCoop-0.6.3-scale-fix.zip) | Not separately preserved / Nicht separat erhalten |
+| 0.6.4 | Footprints failed / Spuren fehlen | [ZIP](packages/WanderburgCoop-0.6.4-ground-marks.zip) | Not separately preserved / Nicht separat erhalten |
+| 0.6.5 | Nitro visibility confirmed / Nitro-Modell sichtbar | [ZIP](packages/WanderburgCoop-0.6.5-boost-ground-test.zip) | Not separately preserved / Nicht separat erhalten |
+| 0.6.6 | IK targets; tracks still fail / IK-Ziele ohne Spuren | [ZIP](packages/WanderburgCoop-0.6.6-foot-contacts.zip) | Not separately preserved / Nicht separat erhalten |
+| 0.6.7 | Corrected origin; legs stable / Beine sinken nicht mehr | [ZIP](packages/WanderburgCoop-0.6.7-visual-origin.zip) | Not separately preserved / Nicht separat erhalten |
+| 0.6.8 | Model retained, tiny marks / Modellerhalt, kleine Abdrücke | [ZIP](packages/WanderburgCoop-0.6.8-upgrade-soles.zip) | Not separately preserved / Nicht separat erhalten |
+| 0.6.9 | Artwork loads, positioning/timing wrong / Grafik geladen, Lage/Ablauf falsch | [ZIP](packages/WanderburgCoop-0.6.9-footprint-art.zip) | [ZIP](source/WanderburgCoop-source-0.6.9.zip) |
 
-Both instances must use 0.5.2 for its WB06 appearance matching. Vehicle meshes/skin
+Both instances must use the same version, currently0.6.9 with WB07. Vehicle meshes/skin
 states are cosmetic; combat, weapons, enemies and progression remain independent.
 Both guides include the exact validation limits and local setup instructions.
 
-Beide Instanzen benötigen für den WB06-Aussehensabgleich 0.5.2. Fahrzeugmeshes und
+Beide Instanzen benötigen dieselbe Version, aktuell0.6.9 mit WB07. Fahrzeugmeshes und
 Ausbaustufen sind rein optisch; Kämpfe, Waffen, Gegner und Fortschritt laufen getrennt.
 Beide Anleitungen beschreiben Prüfstand und Einrichtung.
 

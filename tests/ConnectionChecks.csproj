@@ -6,9 +6,12 @@
     <Nullable>disable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../src/GroundMarkGate.cs" Link="GroundMarkGate.cs" />
+    <Compile Include="../src/VisualRootPose.cs" Link="VisualRootPose.cs" />
     <Compile Include="../src/LocalSession.cs" Link="LocalSession.cs" />
     <Compile Include="../src/PlayerSnapshot.cs" Link="PlayerSnapshot.cs" />
     <Compile Include="../src/VehicleIdentity.cs" Link="VehicleIdentity.cs" />
+    <Compile Include="../src/VisualPose.cs" Link="VisualPose.cs" />
     <Compile Include="../src/BackgroundConnection.cs" Link="BackgroundConnection.cs" />
     <Compile Include="../src/FocusSafety.cs" Link="FocusSafety.cs" />
   </ItemGroup>

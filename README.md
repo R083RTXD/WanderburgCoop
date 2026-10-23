@@ -1,110 +1,85 @@
-# Wanderburg Multiplayer / Co-op Mod — WIP Position Tests
+# Wanderburg Multiplayer / Co-op Mod — WIP Position & Visual Tests
 
-**TEST / WORK IN PROGRESS — position tests only. Not playable multiplayer co-op.**
+**EXPERIMENTAL TEST — NOT PLAYABLE MULTIPLAYER CO-OP.**
 
-**TEST / IN ENTWICKLUNG — bisher nur Positionstests. Noch kein spielbarer Mehrspieler-Koop.**
+**TEST / IN ENTWICKLUNG — NOCH KEIN SPIELBARER MEHRSPIELER-KOOP.**
 
-[Deutsche Anleitung](README.de.md) · [Version archive / Versionsarchiv](versions/README.md) · [Development history](CHANGELOG.md) · [MIT license](LICENSE)
+[Deutsche Anleitung](README.de.md) · [Version archive](versions/README.md) · [Changelog](CHANGELOG.md) · [MIT license](LICENSE)
 
-An unofficial, experimental BepInEx mod for Wanderburg by **R083RTXD**.
-This repository shares the development process, including unsuccessful experiments.
-Current vehicle-visual test build: **0.5.2**, targeting Wanderburg **0.9.14b**, Windows x64,
-Unity 6000.0.63f1 and BepInEx 6.0.0-be.789 (Unity IL2CPP).
+Unofficial mod by **R083RTXD**. Latest user-tested version: **0.6.9** (2026-10-23).
+Targets Wanderburg **0.9.14b**, Windows x64, Unity 6000.0.63f1 and BepInEx
+6.0.0-be.789 Unity IL2CPP. Later untested work is not included.
 
-## What currently works
+## Verified in two instances
 
-- Two instances on the **same Windows PC** connect using UDP `127.0.0.1:28714`.
-- Player position and heading are exchanged. Version 0.5.2 attempts to display
-  the remote vehicle's meshes and active skin stages; the cyan marker remains a fallback.
-- Position movement was verified manually in both game instances.
-- A host-provided map seed is sent to both instances; matching seeds were verified manually.
-- Networking runs on a background worker so Unity loading stalls do not stop heartbeats.
-- F8 temporarily releases the cursor for switching windows.
+- Two games on the **same Windows PC** connect via UDP `127.0.0.1:28714`.
+- Position, heading, castle meshes and wheel/spider-leg poses are exchanged.
+  Normal and spider castles tested; other locked models remain unverified.
+- Animations work after 0.6.3; 0.6.7 stopped sinking remote legs.
+- Castles stay visible during nitro; **nitro VFX are not replicated**.
+- After module installation, the known castle stays visible. **New module meshes
+  are not synchronized**; `Burg (Ausbau offen)` means its layout may be outdated.
+- Background networking survives loading stalls. Either peer survives closing
+  the other in the user's test. F8 temporarily releases the cursor.
+- Host seed is set before MapGenerator.Awake if connected before loading.
+  Identical whole-world terrain/collision state has not been verified.
 
-The matching seed does **not** mean both players share one authoritative world.
-Vehicle gameplay replication, synchronized enemies, combat, damage, loot,
-XP, upgrades and shared progression are **not implemented**.
-Internet connections, LAN discovery, invitation codes, NAT traversal and Steam
-lobbies are **not implemented**. Current tests use loopback on one computer.
+## Known failures and missing gameplay
 
-## Known problems and test status
+**0.6.9 footprints are NOT correct.** Original static artwork loads, but spider
+marks appear too close to the body and accumulate. The native short-lived
+dust/growth animation is not reproduced. Normal wheel tracks are too long/dotted.
+These are cosmetic experiments, not accurate synchronized effects.
 
-On 2026-10-22 the user confirmed that with 0.4.6 either peer keeps running when
-the other closes. Version 0.5.2 retains that focus protection.
+Unknown initial appearances can still use the cyan marker. Retaining a known
+castle after upgrades is a degraded visual fallback, not full module replication.
+Partial matching animation-node counts are expected for that fallback.
 
-**0.5.0 showed a default castle body with spider legs.** Version 0.5.2 adds an
-appearance fingerprint and only uses a matching live/resident model. The exact
-spider body is now confirmed correct by the user. In 0.5.1 its detached legs
-were absent; normal castle wheels were visible. Version 0.5.2 also copies the
-owned detached leg objects. On 2026-10-22 the user confirmed that the correct
-spider body and legs are now visible and work in the two-instance test.
-The legs are still static; animations are not implemented. If no matching
-appearance is available, the cyan marker remains visible. Only static
-meshes/materials are copied. Wheels, weapon animation, attached modules, crew
-and cosmetics are not separately replicated. Unknown models retain the marker.
-Both peers must use 0.5.2 for matching body/leg fingerprints. WB06 is incompatible
-with the older WB04/WB05 packet formats.
-The skin mask supports the first 64 entries in a vehicle's skin-element array.
+Enemies, attacks, weapons, damage, health, loot, XP, upgrades and progression
+still run independently. There is **no shared authoritative world**.
+Internet/LAN discovery, invite codes, NAT traversal and Steam lobbies are absent.
+This is a loopback prototype for one PC, not a playable cooperative combat mod.
 
-The plugin compiles without errors/warnings. 67 managed transport and policy
-checks pass, including vehicle identity, skin changes and old-protocol rejection.
-These checks do not validate Unity rendering or native game behavior.
+**Identified game-save write paths are blocked. Test-run progress is NOT saved.
+Remove the plugin before normal play. Back up saves before testing.**
+No unlock changes are made. Game assets and dependencies are not distributed.
 
-The development plugin blocks identified game-save write paths.
-**Test-run progress is not saved. Remove the plugin before normal play.**
-Old packages and their bundled documentation are historical records; their
-earlier claims about crash fixes are superseded by this status.
+## Installation
 
-## Installation and local position test
+1. Install matching BepInEx 6 Unity IL2CPP x64 and start the game once to generate
+   interop assemblies. Install the game and loader separately.
+2. Download [the preserved 0.6.9 test ZIP](versions/packages/WanderburgCoop-0.6.9-footprint-art.zip).
+3. Close all games. Copy only `WanderburgCoopTest.dll` into `BepInEx/plugins/`,
+   replacing the old DLL. Install only one version.
+4. Start both games normally; **both must show 0.6.9**.
+   Do not use invisible `-batchmode -nographics` startup checks.
+5. Choose **Host erstellen** in one main menu and **Lokal beitreten** in the
+   other. Wait for connection before loading the same biome.
+6. Observe the remote castle. `Posen` counts received animation frames;
+   `Animation: Knoten` shows rig matches. Footprints remain experimental.
+7. F8 releases the cursor. The limitations above are known, not a finished co-op mode.
 
-1. Install the matching **BepInEx 6 Unity IL2CPP x64** loader and start the game
-   once to generate its interop assemblies.
-2. Download a test ZIP from the [version archive](versions/README.md).
-3. Close every game instance and copy only `WanderburgCoopTest.dll` into
-   `BepInEx/plugins/`. Replace the existing copy; do not install multiple versions.
-4. Start two game instances normally. The current panel should show **0.5.2**.
-   Do not use hidden `-batchmode -nographics` startup checks.
-5. In the main menu, select **Host erstellen** in one instance and
-   **Lokal beitreten** in the other. Wait for the connection.
-6. Enter the same biome in both instances. Connect **before** map generation
-   so both can use the negotiated seed.
-7. Look for the cyan test marker. F8 releases the mouse temporarily.
+## Build
 
-The game, BepInEx and its dependencies must be installed separately.
-The repository contains no game binaries, extracted assets, generated game
-assemblies, saves, private logs or crash dumps.
-
-## Build from source
-
-Install the .NET 10 SDK. The plugin targets .NET 6; the managed test harness
-targets .NET 10. Compiling the plugin requires a local game installation with
-BepInEx-generated interop assemblies.
+Install .NET 10 SDK. Plugin targets .NET 6; managed tests target .NET 10.
+Building needs BepInEx-generated interop assemblies from your own game install.
 
 ```powershell
 ./build.ps1 -GameRoot 'D:/SteamLibrary/steamapps/common/Wanderburg Game'
-```
-
-To run only the managed checks, without a game installation:
-
-```powershell
 dotnet run --project ./tests/ConnectionChecks.csproj -c Release
 ```
 
+0.6.9 compiled without warnings/errors and passed **121 managed checks**.
+Those checks do not validate native rendering, collision or full gameplay.
 The build script creates an installation ZIP under `artifacts/`.
-Do not add game assemblies or extracted content to the repository.
 
-## Development archive and contributions
+## History and license
 
-[The archive](versions/README.md) contains all preserved installation packages
-and source snapshots. Versions 0.1.0–0.3.0 are documented in the changelog;
-complete original archives for those versions are unavailable.
+[The archive](versions/README.md) preserves installation packages, available
+source snapshots, real test outcomes and SHA256 checksums. Missing historical
+sources are explicitly marked; Git history is not fabricated. Documentation
+inside old ZIPs is historical and can contain superseded claims.
 
-Bug reports and code contributions are welcome. Include the game, loader and
-mod versions, reproduction steps, and whether you were testing host or client.
-Remove personal paths before sharing log excerpts.
-
-## License
-
-Original mod code: [MIT](LICENSE). Game content, trademarks and separately
-installed dependencies have their own terms; see [third-party notices](THIRD_PARTY_NOTICES.md).
-This is an unofficial community project, not affiliated with or endorsed by the game developers.
+Original mod code: MIT. [Third-party notices](THIRD_PARTY_NOTICES.md).
+No game binaries, extracted artwork, generated interop assemblies, saves,
+private logs or crash dumps are included.
