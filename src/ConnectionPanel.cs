@@ -164,7 +164,7 @@ public sealed class ConnectionPanel : MonoBehaviour
     public void OnGUI()
     {
         float x = Math.Max(8, Screen.width - 408);
-        GUI.Box(new Rect(x, 8, 400, 454), "Wanderburg Co-op 0.6.9 - Abdruckgrafik");
+        GUI.Box(new Rect(x, 8, 400, 454), "Wanderburg Co-op 0.6.18 - Rauch und Staub");
         GUI.Label(new Rect(x + 12, 38, 376, 25), connection.Status);
         GUI.Label(new Rect(x + 12, 64, 376, 25), $"Pakete: gesendet {connection.Sent} / empfangen {connection.Received}");
         if (!connection.Active)

@@ -11,6 +11,8 @@ internal sealed class GroundMarkGraphic
     private Part[] parts = Array.Empty<Part>();
     private Quaternion rotation;
     private Vector3 scale;
+    private AnimationCurve scaleCurve, heightCurve;
+    public float Lifetime { get; private set; } = GroundMarkTiming.FootFallbackLifetime;
     public GameObject Source { get; private set; }
     public bool Available => parts.Length > 0;
     private static readonly BepInEx.Logging.ManualLogSource Log =
@@ -20,7 +22,16 @@ internal sealed class GroundMarkGraphic
     {
         Source = prefab;
         parts = Array.Empty<Part>();
+        scaleCurve = heightCurve = null;
+        Lifetime = GroundMarkTiming.FootFallbackLifetime;
         if (!prefab) return;
+        var effect = prefab.GetComponent<GroundEffect>();
+        if (effect)
+        {
+            Lifetime = GroundMarkTiming.SafeFootLifetime(effect.lifetime);
+            scaleCurve = effect.scaleCurve;
+            heightCurve = effect.yCurve;
+        }
         rotation = prefab.transform.localRotation;
         scale = prefab.transform.localScale;
         if (scale.sqrMagnitude < 0.000000000001f)
@@ -42,7 +53,17 @@ internal sealed class GroundMarkGraphic
             if (found.Count == 4) break; // Bound both pooling cost and draw calls.
         }
         parts = found.ToArray();
-        Log.LogInfo($"PID {Environment.ProcessId}: footprint prefab={prefab.name}, static mesh parts={parts.Length}, root scale={scale}; graphics only, no prefab instantiation.");
+        Log.LogInfo($"PID {Environment.ProcessId}: footprint prefab={prefab.name}, static mesh parts={parts.Length}, root scale={scale}, lifetime={Lifetime}, scaleCurve={scaleCurve != null}, heightCurve={heightCurve != null}; graphics only, no prefab instantiation.");
+    }
+
+    public void Animate(GameObject graphic, float normalizedAge)
+    {
+        if (!graphic) return;
+        float t = Mathf.Clamp01(normalizedAge);
+        float factor = scaleCurve != null ? scaleCurve.Evaluate(t) : GroundMarkTiming.FallbackScale(t);
+        float height = heightCurve != null ? heightCurve.Evaluate(t) : 0;
+        graphic.transform.localScale = scale * (float.IsFinite(factor) ? Mathf.Clamp(factor, 0, 8) : 1);
+        graphic.transform.localPosition = Vector3.up * (float.IsFinite(height) ? Mathf.Clamp(height, -0.1f, 2) : 0);
     }
 
     public GameObject Build(Transform parent)

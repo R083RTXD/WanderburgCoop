@@ -10,14 +10,17 @@ namespace WanderburgCoopTest;
 internal sealed class RemoteGroundMarks : IDisposable
 {
     private const int MaxMarks = 256;
-    private const float Lifetime = 14;
     private readonly GroundMarkGate[] gates = Enumerable.Range(0, 16).Select(_ => new GroundMarkGate()).ToArray();
     private readonly GameObject[] marks = new GameObject[MaxMarks];
     private readonly GameObject[] nativeGraphics = new GameObject[MaxMarks];
     private readonly MeshRenderer[] simpleRenderers = new MeshRenderer[MaxMarks];
     private readonly MeshFilter[] simpleFilters = new MeshFilter[MaxMarks];
     private readonly GroundMarkGraphic nativeGraphic = new();
+    private readonly RemoteStepDust dust = new();
+    private bool dustFailed;
     private readonly float[] born = new float[MaxMarks];
+    private readonly float[] lifetimes = new float[MaxMarks];
+    private readonly bool[] nativeFoot = new bool[MaxMarks];
     private GameObject worldRoot;
     private Material material;
     private Mesh wheelMesh, footMesh;
@@ -32,21 +35,39 @@ internal sealed class RemoteGroundMarks : IDisposable
     public int Emitted { get; private set; }
     public string Status { get; private set; } = "warte";
 
-    public void Update(Transform vehicle, IReadOnlyList<VehicleModel.GroundContact> contacts, bool freshPose, GameObject footprintPrefab)
+    public void Update(Transform vehicle, IReadOnlyList<VehicleModel.GroundContact> contacts, bool freshPose, GameObject footprintPrefab,
+        bool nativeWheelTrails = false)
     {
         if (vehicle && nativeGraphic.Source != footprintPrefab)
         {
             Clear();
             nativeGraphic.Configure(footprintPrefab);
+            try { dust.Configure(footprintPrefab); }
+            catch (Exception ex)
+            {
+                dust.Dispose(); dustFailed = true;
+                Log.LogError($"Dust configuration failed; footprint graphics retained: {ex}");
+            }
         }
         float now = Time.unscaledTime;
+        if (!dustFailed)
+        {
+            try { dust.Tick(now); }
+            catch (Exception ex)
+            {
+                dust.Dispose(); dustFailed = true;
+                Log.LogError($"Dust playback failed; footprint graphics retained: {ex}");
+            }
+        }
         for (int i = 0; i < marks.Length; i++)
         {
             var mark = marks[i];
             if (!mark || !mark.activeSelf) continue;
-            float remaining = Lifetime - (now - born[i]);
-            if (remaining <= 0) mark.SetActive(false);
-            else mark.transform.localScale = Vector3.one * Mathf.Clamp01(remaining / 2);
+            float age = now - born[i];
+            float duration = lifetimes[i];
+            if (duration <= 0 || age >= duration) mark.SetActive(false);
+            else if (nativeFoot[i]) nativeGraphic.Animate(nativeGraphics[i], age / duration);
+            else mark.transform.localScale = Vector3.one * GroundMarkTiming.FallbackScale(age / duration);
         }
         if (!vehicle || !freshPose)
         {
@@ -91,10 +112,11 @@ internal sealed class RemoteGroundMarks : IDisposable
                 var vm = GM.gm && GM.gm.vm ? GM.gm.vm : null;
                 Log.LogInfo($"PID {Environment.ProcessId}: contacts={contacts.Count}, moving={moving}, foot={contact.Foot}, node={t.name}, position={p}, ground={ground}, hit={hitInfo}, nativePlane={(vm && vm.playerGroundPlaneInitialized ? vm.playerGroundPlaneY.ToString() : "uninitialized")}, stamps={Emitted}");
             }
+            if (!contact.Foot && nativeWheelTrails) continue;
             if (!gates[i].Sample(p.x, p.z, ground, moving, contact.Foot)) continue;
             if (EnsureResources()) Stamp(hit.point, hit.normal, vehicle.forward, contact.Foot, now);
         }
-        Status = contacts.Count == 0 ? "keine Kontaktpunkte" : $"{contacts.Count} Kontakte / {Emitted} ({(nativeGraphic.Available ? "Originalgrafik" : "Ersatzring")})";
+        Status = nativeWheelTrails ? "Original-Radspuren" : contacts.Count == 0 ? "keine Kontaktpunkte" : $"{Emitted} Abdr. / Staub {dust.Emitted} ({dust.ArtworkStatus})";
     }
 
     public void Suspend()
@@ -183,13 +205,27 @@ internal sealed class RemoteGroundMarks : IDisposable
         mark.transform.SetPositionAndRotation(point + normal * 0.025f, Quaternion.LookRotation(tangent, normal));
         mark.transform.localScale = Vector3.one;
         born[index] = now;
+        nativeFoot[index] = useNative;
+        lifetimes[index] = foot ? useNative ? nativeGraphic.Lifetime : GroundMarkTiming.FootFallbackLifetime
+            : GroundMarkTiming.WheelLifetime;
+        if (useNative) nativeGraphic.Animate(nativeGraphics[index], 0);
         mark.SetActive(true);
+        if (foot && !dustFailed)
+        {
+            try { dust.Emit(worldRoot.transform, point, normal, now); }
+            catch (Exception ex)
+            {
+                dust.Dispose(); dustFailed = true;
+                Log.LogError($"Step dust disabled; footprint graphics retained: {ex}");
+            }
+        }
         Emitted++;
     }
 
     public void Clear()
     {
         Suspend();
+        dust.Clear();
         if (worldRoot) Object.Destroy(worldRoot);
         worldRoot = null;
         Array.Clear(marks, 0, marks.Length);
@@ -203,6 +239,7 @@ internal sealed class RemoteGroundMarks : IDisposable
     public void Dispose()
     {
         Clear();
+        dust.Dispose();
         if (material) Object.Destroy(material);
         if (wheelMesh) Object.Destroy(wheelMesh);
         if (footMesh) Object.Destroy(footMesh);

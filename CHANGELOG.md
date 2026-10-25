@@ -15,6 +15,146 @@
 > aus dem gemeinsamen Player.log waren nicht zuverlässig. Am 22.10.2026 hat der
 > Nutzer das getrennte Beenden in beiden Richtungen mit 0.4.6 bestätigt.
 
+## 0.6.18 — 2026-10-25 — smoke and simultaneous foot dust (local test)
+
+**User tested / Vom Nutzer getestet:** spider visuals now work. Normal castle
+dust and chimney smoke are visible, but their strength differs. General/DJ green
+music notes are missing remotely. Full effect-state and module appearance sync
+remain pending; see Docs/VisualReplicationRoadmap.md. Published as WIP with these
+known defects, not as a finished visual/multiplayer implementation.
+
+- User confirms tracks appear, normal chimney smoke/wheel dust missing; spider
+  dust appears on only some marks. Global one-burst throttle discarded simultaneous
+  feet. Allow16 contacts/sample with bounded64-burst pool, recycle oldest if full.
+- Include registered engineSmokeParticles, active while peer fresh; wheels remain
+  movement-dependent. Detect zero particle output after350ms, then native Emit
+  using cached driving rate or bounded fallback. Original appearance/simulation,
+  approximate fallback cadence; this is a runtime experiment, not confirmed fix.
+- No particle module setters, save changes or unlock changes. Modules still pending.
+
+## 0.6.17 — 2026-10-25 — driving effects without wheel contacts (local test)
+
+- Generic support uses registered components, not castle names or unlocks.
+  Remove the wheel-contact minimum from driving effect capture/build so tracked
+  rigs without wheel contacts can use registered original trails/particles.
+- Preserve foot-rig path and cosmetic whitelist. Log drive type and effect counts.
+- Locked variants remain visually UNTESTED. Track texture scrolling and special
+  leg footsteps remain pending. No unlock/save changes.
+
+## 0.6.16 — 2026-10-25 — normal castle wheel effects (local test)
+
+- User accepts spider dust in 0.6.15; normal castle remains incorrect.
+- Both logs show wheel quaternion component 1.0000001 discarding complete poses.
+  Normalize near-unit samples before serialization; retain strict wire validation.
+- Copy registered native VP wheel trails and driving particles for wheel vehicles,
+  with the same particle-only safety principle extended to TrailRenderer. Add
+  effect transform chains to poses, toggle on fresh movement and clear teleports.
+  Suppress approximate wheel marks only when native trails are available.
+- Native runtime visual validation pending. Spider dust unchanged; modules pending.
+
+## 0.6.15 — 2026-10-25 — authored particle playback (local test)
+
+- User video confirms 0.6.14 dust remains invisible while emission counts rise.
+- Replace plain mesh cloud replay with original particle-only subtree cloning.
+  Only Transform, ParticleSystem and ParticleSystemRenderer are allowed before
+  instantiation. Full step prefabs, scripts, colliders and audio are excluded.
+- Retain authored materials, particle sizes, color, bursts and lifetime; use
+  native Stop/Play/IsAlive, never stripped module setters. Maximum 24 live bursts,
+  12 starts/second and a six-second cleanup cap. This is local effect playback
+  from received foot contacts, not streamed host particle state or exact timing.
+- Remove obsolete approximation/filter helpers and four corresponding checks.
+  Native runtime appearance and API availability still require the user's test.
+
+## 0.6.14 — 2026-10-25 — separate dust from ground fragments (local test)
+
+- User reports angular brown shapes. Both logs identify original renderers:
+  VFX_Step_Dust -> Sphere.002; VFX_FlyingGround -> Cube, both Mesh mode.
+- Previous replay treated ground debris and dust as equal-size cloud puffs.
+  Exclude the confirmed FlyingGround renderer from cloud-only replay. Preserve
+  actual dust mesh/materials, placement and timing; no speculative alpha changes.
+- Classification uses the native renderer label, not a global cube-mesh ban.
+  Original debris simulation is omitted, not claimed as reproduced correctly.
+- 134managed checks pass; native visual comparison still pending.
+- Erd-/Steinstücke nicht mehr als große Staubwolken rendern; eigentliche
+  Original-Staubgrafik bleibt erhalten. Noch keine vollständige Originalsimulation.
+
+## 0.6.13 — 2026-10-25 — original dust artwork (tested, angular debris defect)
+
+- User confirms brown native artwork but sees angular shapes. Logs confirm
+  inclusion of original Cube ground-fragment template in cloud replay.
+
+- User confirms visible0.6.12 dust but requests the in-game spider artwork,
+  not the procedural soft-circle approximation.
+- Read up to2ParticleSystemRenderer graphics from installed stepEffectPrefab.
+  Mesh mode uses its original shared mesh/materials. Billboard variants use
+  original material on a plain quad with camera/ground orientation as applicable.
+- No ParticleSystem creation or main-module/legacy control calls. Module assembly
+  is referenced only for renderer metadata. Do not execute source effect scripts.
+- Remove synthetic dust texture/material fallback; unsupported layouts explicitly
+  show Originaldaten fehlen. Native shared assets are never modified/exported.
+- Keep bounded cosmetic spread/growth/shrink,24clouds and3copies per template.
+  This is original ARTWORK, not exact native burst/noise/curve simulation.
+- 132managed checks pass; actual native artwork/mode/scale needs user testing.
+- Originalgrafik-Test ohne künstliche braune Wolke. Keine Behauptung, dass der
+  vollständige Original-Partikeleffekt bereits synchronisiert wird.
+
+## 0.6.12 — 2026-10-25 — mesh dust without stripped particle setters (tested)
+
+- User confirms visible replacement dust; it does not match original spider
+  dust. Functional fallback renderer established; original artwork still needed.
+
+- Confirmed 0.6.11 failure: MissingMethodException MainModule.set_loop(Boolean)
+  called by ParticleSystem.loop. Compile success did not prove this wrapper was
+  usable in the game's stripped IL2CPP runtime. Screenshot Staub0 despite120marks.
+- Replace particle components with24bounded camera-facing mesh clouds,12textured
+  quads each; explicit spread/growth/vertex-alpha fade over1.2s, max12clouds/sec.
+- Remove particle module dependency/control calls. No native pointer/icall hacks.
+  Existing foot contacts/graphics, castle animation and upgrades are unchanged.
+- Main camera/shader absence logs once; first successful cloud logs camera and
+  shader. Clear/destroy only owned cloud objects, meshes, material and texture.
+- 133managed checks pass. Visible native mesh-cloud validation still pending.
+- Mesh-Staubtest statt des nachweislich fehlenden Partikel-Setters. Exakter
+  Originaleffekt wird nicht behauptet; Spieltest weiter erforderlich.
+
+## 0.6.11 — 2026-10-25 — bounded cosmetic step-dust test (tested, failed)
+
+- Native test failed at stripped MainModule.set_loop, not at footprint contact
+  generation. Particle rendering path disabled itself; footprint meshes retained.
+
+- User confirms correct footprint placement/artwork in 0.6.10, but the dust
+  cloud is absent. Existing code copied static mesh artwork, not particle effects.
+  Logs: VFX_Spiderleg_Step has two static meshes and no root GroundEffect curves.
+- Add a separate graphics-only particle pool at the existing foot contacts.
+  Borrow a compatible native billboard material/basic color/size where available;
+  otherwise draw a soft brown procedural fallback. Not an exact native VFX replay.
+- At most24systems,12particles per burst,12bursts/sec. Paused fresh systems render
+  explicitly updated particle buffers for1.2s with spread/growth/alpha fade.
+  The installed IL2CPP API lacks most modern setters, so use its retained legacy
+  setters and particle buffer API. No native prefab or behaviors are cloned.
+- No collision, trigger, light, external force or sub-emitter modules copied.
+  Dust errors are isolated from footprints. Clear pooled objects on scene/model
+  changes; destroy only owned fallback material/texture at teardown.
+- Panel shows Staub count.130managed checks pass; native visual test pending.
+- Staubwolken-Test: begrenzte optische Partikel, keine Spielmechanik/Schäden.
+
+## 0.6.10 — 2026-10-23 — sole XZ and short effect playback (tested, partial)
+
+- On2026-10-25 user confirms footprints load at correct positions, but the
+  animated dust cloud is still missing. Native particle visuals are not yet copied.
+
+- User screenshots: 0.6.9 spider graphics accumulate near the vehicle centre;
+  normal wheel tracks are too long/dotted. Native step effects grow and vanish.
+- Use matching visible sole renderer bounds for X/Z as well as height instead
+  of retaining inward IK-target X/Z. Lowest finite leg renderer determines point.
+- Read native GroundEffect lifetime/scaleCurve/yCurve as data and animate only
+  plain graphics clones. No GroundEffect/gameplay scripts execute remotely.
+  Curve outputs and lifetimes are bounded; behavior still needs native testing.
+- Shorten wheel traces to1.2seconds and fallback foot rings to2.4seconds instead
+  of14seconds. Reused marks reset age, native/fallback style and lifetime.
+- 125 managed checks pass; visual timing/proportions remain unverified.
+- Lokaler Test: Sohlenposition statt innerem IK-Pivot, Größen-/Höhenkurve und
+  kurze Lebensdauer. NICHT auf GitHub veröffentlicht; dort bleibt getestet0.6.9.
+
 ## 0.6.9 — 2026-10-23 — footprint artwork test (tested, known defects)
 
 - Latest user-tested publication: artwork loads but spider marks are misplaced

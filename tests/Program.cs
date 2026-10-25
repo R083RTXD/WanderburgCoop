@@ -26,15 +26,42 @@ static void Pump(LocalSession host, LocalSession client, Func<bool> done, double
 }
 
 var closeGate = new FocusCloseGate();
-var soleHeight = new SoleHeight();
-Check(soleHeight.OrFallback(5.185f) == 5.185f,
+var wheelRotation = VisualRootPose.NormalizeSample(new System.Numerics.Quaternion(9.181476E-17f, 8.812395E-15f, 1.0000001f, 4.768372E-07f));
+Check(new VisualNodePose(0x91798576, -2.8300009f, 1.56f, 2.5400007f,
+    wheelRotation.X, wheelRotation.Y, wheelRotation.Z, wheelRotation.W, 1.0000002f, 1.0000002f, 1).IsValid,
+    "Observed normal-castle wheel rounding no longer discards the full animation frame");
+var malformedRotation = VisualRootPose.NormalizeSample(new System.Numerics.Quaternion(0, 0, 2, 0));
+Check(!new VisualNodePose(1, 0, 0, 0, malformedRotation.X, malformedRotation.Y, malformedRotation.Z, malformedRotation.W, 1, 1, 1).IsValid,
+    "Capture normalization does not repair malformed rotations or weaken network validation");
+var dustGate = new DustRateGate();
+Check(dustGate.TryTake(0), "First cosmetic dust burst can render immediately");
+Check(Enumerable.Range(0, 15).All(_ => dustGate.TryTake(0)), "All sixteen simultaneous foot contacts receive dust");
+Check(!dustGate.TryTake(0) && !dustGate.TryTake(0.01), "A full contact batch remains bounded against repeated requests");
+Check(dustGate.TryTake(0.09), "Dust rate gate allows a later step without blocking forever");
+Check(!dustGate.TryTake(double.NaN) && !dustGate.TryTake(double.PositiveInfinity) && !dustGate.TryTake(-1),
+    "Invalid dust timestamps cannot bypass the cosmetic rate budget");
+dustGate.Reset();
+Check(dustGate.TryTake(0), "Model or scene reset re-arms the cosmetic dust budget");
+var soleHeight = new SoleContact();
+var originalIkPoint = new System.Numerics.Vector3(1, 5.185f, 1);
+Check(soleHeight.OrFallback(originalIkPoint) == originalIkPoint,
     "Missing sole geometry preserves the source target rather than fabricating terrain height");
-soleHeight.Include(1.2f); soleHeight.Include(0.12f); soleHeight.Include(3);
-Check(soleHeight.OrFallback(5.185f) == 0.12f,
+soleHeight.Include(3, 1.2f, 3); soleHeight.Include(6, 0.12f, -5); soleHeight.Include(0, 3, 0);
+Check(soleHeight.OrFallback(originalIkPoint).Y == 0.12f,
     "Visible leg lower edge replaces the observed elevated native IK reference height");
-soleHeight.Include(float.NaN); soleHeight.Include(float.NegativeInfinity);
-Check(soleHeight.OrFallback(5.185f) == 0.12f,
+soleHeight.Include(0, float.NaN, 0); soleHeight.Include(0, float.NegativeInfinity, 0);
+Check(soleHeight.OrFallback(originalIkPoint).Y == 0.12f,
     "Nonfinite renderer bounds do not corrupt the sole contact height");
+Check(soleHeight.OrFallback(originalIkPoint).X == 6 && soleHeight.OrFallback(originalIkPoint).Z == -5,
+    "Footprint uses the visible foot's horizontal position instead of the inward IK pivot");
+Check(GroundMarkTiming.WheelLifetime < 2 && GroundMarkTiming.WheelLifetime < GroundMarkTiming.FootFallbackLifetime,
+    "Wheel traces are short-lived instead of the previous fourteen-second trails");
+Check(GroundMarkTiming.SafeFootLifetime(float.NaN) == GroundMarkTiming.FootFallbackLifetime &&
+    GroundMarkTiming.SafeFootLifetime(1000) == 6 && GroundMarkTiming.SafeFootLifetime(0) > 0,
+    "Native footprint lifetime stays finite, positive and bounded");
+Check(GroundMarkTiming.FallbackScale(0) < GroundMarkTiming.FallbackScale(0.5f) &&
+    GroundMarkTiming.FallbackScale(1) == 0,
+    "Fallback dust graphics expand briefly and finish at zero scale");
 var originSnapshot = new PlayerSnapshot(true, 4, 10, 0.4f, 20, 90, 1, 0, 1);
 var ownerPosition = new System.Numerics.Vector3(10, 2, 20);
 var yawFrame = System.Numerics.Quaternion.CreateFromAxisAngle(System.Numerics.Vector3.UnitY, MathF.PI / 2);

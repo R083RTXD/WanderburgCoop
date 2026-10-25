@@ -7,6 +7,11 @@ namespace WanderburgCoopTest;
 // and detached vehicle-relative roots. Pure math for regression coverage.
 public static class VisualRootPose
 {
+    // Normalize only near-unit samples from Unity; keep malformed data invalid.
+    public static Quaternion NormalizeSample(Quaternion rotation) =>
+        rotation.LengthSquared() is >= 0.999f and <= 1.001f
+            ? Quaternion.Normalize(rotation) : rotation;
+
     public static VisualNodePose Capture(PlayerSnapshot snapshot, Vector3 position, Quaternion rotation, Vector3 scale)
     {
         var yaw = Quaternion.CreateFromAxisAngle(Vector3.UnitY, snapshot.Yaw * MathF.PI / 180);

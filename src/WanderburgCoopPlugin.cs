@@ -9,7 +9,7 @@ public sealed class WanderburgCoopPlugin : BasePlugin
 {
     public const string PluginGuid = "de.wanderburg.coop";
     public const string PluginName = "Wanderburg Co-op";
-    public const string PluginVersion = "0.6.9";
+    public const string PluginVersion = "0.6.18";
 
     public override void Load()
     {

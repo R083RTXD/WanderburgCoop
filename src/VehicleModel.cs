@@ -13,6 +13,9 @@ internal sealed class VehicleModel : IDisposable
     internal readonly record struct GroundContact(Transform Transform, bool Foot, Renderer[] Soles = null);
     internal readonly List<GroundContact> GroundContacts = new();
     internal GameObject FootprintPrefab { get; private set; }
+    private readonly RemoteDrivingEffects drivingEffects = new();
+    internal bool HasNativeWheelTrails => drivingEffects.HasTrails;
+    internal void UpdateDrivingEffects(bool fresh) => drivingEffects.Update(visualRoot, fresh);
     private bool poseInitialized;
     public int AnimatedNodeCount => poseTargets.Count;
     private Transform visualRoot;
@@ -94,6 +97,10 @@ internal sealed class VehicleModel : IDisposable
         // vehicle frame under dedicated IDs; do not treat the solver bone tip
         // (observed five units above terrain) as a planted foot contact.
         var contacts = GetGroundContacts(vehicle);
+        // Tracks may register driving VFX without any wheel-contact transforms.
+        // Only explicit vehicle effect references are considered; no fake feet.
+        if (contacts.All(c => !c.Foot))
+            foreach (var effect in RemoteDrivingEffects.Sources(vehicle)) AddChain(effect, vehicle.transform, "body");
         for (int i = 0; i < contacts.Count; i++)
             result.Add(new PoseSource(VehicleIdentity.FromGroundContact(i, contacts[i].Foot),
                 contacts[i].Transform, true, Soles: contacts[i].Soles));
@@ -296,6 +303,8 @@ internal sealed class VehicleModel : IDisposable
             anchor.transform.localPosition = source.transform.InverseTransformPoint(contact.Transform.position);
             GroundContacts.Add(new(anchor.transform, contact.Foot));
         }
+        if (sourceContacts.All(c => !c.Foot))
+            drivingEffects.Build(source, t => CopyTransform(t, source.transform, source.transform));
         poseTargets.Clear();
         foreach (var node in GetPoseSources(source))
             if (transforms.TryGetValue(node.Transform.GetInstanceID(), out var target)) poseTargets[node.Id] = target;
@@ -354,6 +363,7 @@ internal sealed class VehicleModel : IDisposable
 
     public void ClearMeshes()
     {
+        drivingEffects.Dispose();
         foreach (var mesh in bakedMeshes) if (mesh) Object.Destroy(mesh);
         bakedMeshes.Clear();
         transforms.Clear();

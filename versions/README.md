@@ -4,6 +4,16 @@
 
 **TEST / IN ENTWICKLUNG — bisher nur Positionstests.**
 
+
+Latest user-tested snapshot: **0.6.18 (2026-10-25)**. Spider visuals accepted;
+normal-castle dust/smoke intensity differs, DJ music notes missing. New module
+meshes and gameplay sync remain pending. Locked variants untested.
+Zuletzt getestet: **0.6.18**. Spinne funktioniert; Staub-/Qualmstärke abweichend,
+DJ-Noten fehlen. Neue Module und gemeinsames Gameplay noch offen.
+
+Earlier outcome descriptions below are historical. / Frühere Ergebnisse unten
+beschreiben historische Versionen. Original ZIP contents are preserved unchanged.
+
 These are the original preserved development packages, including failed experiments.
 They are not stable releases. Install only one DLL version at a time. On 2026-10-22
 the user confirmed that either peer survives closing the other with 0.4.6.
@@ -11,7 +21,7 @@ Vehicle rendering was tested: 0.5.1 has the correct castle body, but spider legs
 were missing. Normal castle wheels are present. 0.5.2 adds detached leg objects;
 the user confirmed the correct spider body and visible legs on 2026-10-22.
 Animations were confirmed in0.6.3; leg height in0.6.7; upgrade retention and
-visible placeholder marks in0.6.8. Latest tested0.6.9 still has misplaced spider
+visible placeholder marks in0.6.8. Historical0.6.9 has misplaced spider
 effects, incorrect effect timing and overly long/dotted wheel tracks. It is not playable co-op.
 The original documentation inside older ZIPs may contain superseded conclusions.
 
@@ -54,11 +64,21 @@ Anleitungen in älteren ZIPs können inzwischen widerlegte Aussagen enthalten.
 | 0.6.8 | Model retained, tiny marks / Modellerhalt, kleine Abdrücke | [ZIP](packages/WanderburgCoop-0.6.8-upgrade-soles.zip) | Not separately preserved / Nicht separat erhalten |
 | 0.6.9 | Artwork loads, positioning/timing wrong / Grafik geladen, Lage/Ablauf falsch | [ZIP](packages/WanderburgCoop-0.6.9-footprint-art.zip) | [ZIP](source/WanderburgCoop-source-0.6.9.zip) |
 
-Both instances must use the same version, currently0.6.9 with WB07. Vehicle meshes/skin
+| 0.6.10 | Correct footprint placement / Abdrücke richtig platziert | [ZIP](packages/WanderburgCoop-0.6.10-sole-playback.zip) | No complete matching snapshot archived / Kein vollständiger passender Snapshot archiviert |
+| 0.6.11 | FAILED stripped particle setters / Partikel-API fehlgeschlagen | [ZIP](packages/WanderburgCoop-0.6.11-step-dust.zip) | No complete matching snapshot archived / Kein vollständiger passender Snapshot archiviert |
+| 0.6.12 | Visible replacement dust, not original / Ersatzstaub sichtbar | [ZIP](packages/WanderburgCoop-0.6.12-mesh-dust.zip) | No complete matching snapshot archived / Kein vollständiger passender Snapshot archiviert |
+| 0.6.13 | Native artwork, angular debris / Originalgrafik mit eckigen Trümmern | [ZIP](packages/WanderburgCoop-0.6.13-original-dust-art.zip) | No complete matching snapshot archived / Kein vollständiger passender Snapshot archiviert |
+| 0.6.14 | FAILED invisible dust / Staub unsichtbar | [ZIP](packages/WanderburgCoop-0.6.14-dust-debris-filter.zip) | No complete matching snapshot archived / Kein vollständiger passender Snapshot archiviert |
+| 0.6.15 | Original spider particles accepted / Original-Spinnenpartikel bestätigt | [ZIP](packages/WanderburgCoop-0.6.15-native-particles.zip) | No complete matching snapshot archived / Kein vollständiger passender Snapshot archiviert |
+| 0.6.16 | Wheel replay experiment; no separate visual result / Kein separater Spieltest | [ZIP](packages/WanderburgCoop-0.6.16-native-wheels.zip) | No complete matching snapshot archived / Kein vollständiger passender Snapshot archiviert |
+| 0.6.17 | Tracks visible, smoke/dust missing / Spuren sichtbar, Qualm/Staub fehlen | [ZIP](packages/WanderburgCoop-0.6.17-driving-variants.zip) | No complete matching snapshot archived / Kein vollständiger passender Snapshot archiviert |
+| 0.6.18 | Spider accepted; smoke intensity/DJ pending / Spinne bestätigt, Stärke/DJ offen | [ZIP](packages/WanderburgCoop-0.6.18-smoke-dust.zip) | [ZIP](source/WanderburgCoop-source-0.6.18.zip) |
+
+Both instances must use the same version, currently0.6.18 with WB07. Vehicle meshes/skin
 states are cosmetic; combat, weapons, enemies and progression remain independent.
 Both guides include the exact validation limits and local setup instructions.
 
-Beide Instanzen benötigen dieselbe Version, aktuell0.6.9 mit WB07. Fahrzeugmeshes und
+Beide Instanzen benötigen dieselbe Version, aktuell0.6.18 mit WB07. Fahrzeugmeshes und
 Ausbaustufen sind rein optisch; Kämpfe, Waffen, Gegner und Fortschritt laufen getrennt.
 Beide Anleitungen beschreiben Prüfstand und Einrichtung.
 

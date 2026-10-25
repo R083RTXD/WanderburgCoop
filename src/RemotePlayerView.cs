@@ -33,12 +33,14 @@ internal sealed class RemotePlayerView : IDisposable
     public void Update(ConnectionInfo session, PlayerSnapshot local)
     {
         UpdateView(session, local);
+        vehicleModel.UpdateDrivingEffects(Visible && hasVehicleModel && session.RemotePose != null);
         if (!marksErrorLogged)
         {
             try
             {
                 groundMarks.Update(Visible && hasVehicleModel && root ? root.transform : null,
-                    vehicleModel.GroundContacts, session.RemotePose != null, vehicleModel.FootprintPrefab);
+                    vehicleModel.GroundContacts, session.RemotePose != null, vehicleModel.FootprintPrefab,
+                    vehicleModel.HasNativeWheelTrails);
             }
             catch (Exception ex)
             {

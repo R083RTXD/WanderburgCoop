@@ -77,16 +77,22 @@ internal sealed class VisualPoseSampler
             Vector3 contactPosition = t.position;
             if (node.Soles != null && node.Soles.Length > 0)
             {
-                var sole = new SoleHeight();
+                var sole = new SoleContact();
                 foreach (var renderer in node.Soles)
-                    if (renderer && renderer.enabled) sole.Include(renderer.bounds.min.y);
-                contactPosition.y = sole.OrFallback(contactPosition.y);
+                    if (renderer && renderer.enabled)
+                    {
+                        var bounds = renderer.bounds;
+                        sole.Include(bounds.center.x, bounds.min.y, bounds.center.z);
+                    }
+                var resolved = sole.OrFallback(new System.Numerics.Vector3(contactPosition.x, contactPosition.y, contactPosition.z));
+                contactPosition = new Vector3(resolved.X, resolved.Y, resolved.Z);
             }
             Vector3 p = node.VehicleRelative ? vehicle.transform.InverseTransformPoint(contactPosition) : t.localPosition;
             Quaternion q = node.VehicleRelative ? Quaternion.Inverse(vehicle.transform.rotation) * t.rotation : t.localRotation;
             Vector3 s = node.VehicleRelative ? new Vector3(t.lossyScale.x / scale.x,
                 t.lossyScale.y / scale.y, t.lossyScale.z / scale.z) : t.localScale;
-            poses[i] = new VisualNodePose(node.Id, p.x, p.y, p.z, q.x, q.y, q.z, q.w, s.x, s.y, s.z);
+            var normalized = VisualRootPose.NormalizeSample(new System.Numerics.Quaternion(q.x, q.y, q.z, q.w));
+            poses[i] = new VisualNodePose(node.Id, p.x, p.y, p.z, normalized.X, normalized.Y, normalized.Z, normalized.W, s.x, s.y, s.z);
             if (node.Id == VehicleIdentity.FromGroundContact(0, true) && !loggedStates.Contains("source-contact"))
             {
                 loggedStates.Add("source-contact");

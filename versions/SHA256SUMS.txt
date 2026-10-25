@@ -12,6 +12,15 @@ d51c83841036de221e6113dcd4514828b9006b675e1ce12fe26733abf10f5f52  packages/Wande
 ba63dba91eb6cc013d01e357d6f02f11c353c961988f294f4c4dd3b59afa8988  packages/WanderburgCoop-0.5.2-spider-leg-test.zip
 90cebd4fc084e83ec38cf8d279ec57a6d5528c16dc80950a5b8f7c9ef5996c10  packages/WanderburgCoop-0.6.0-animation-test.zip
 6e792cc771b4b8223cf3ce7f2a7e350375f26cd58f0b7ac9668aea1bf54999e9  packages/WanderburgCoop-0.6.1-pose-diagnosis.zip
+f09c451e68e3fa60f949b4cf3792277d2fa43792a6a966cb4c8cad90082a142a  packages/WanderburgCoop-0.6.10-sole-playback.zip
+0d9878699d7839667cc6b17608e936016b0fbab0fe731a519179ebbd9bb15135  packages/WanderburgCoop-0.6.11-step-dust.zip
+4f88fcfd7ab7792a1ccd0a87f01d3a06e08b74a118bf992b26c917170b65065d  packages/WanderburgCoop-0.6.12-mesh-dust.zip
+d6204d936c85a8f1d83cca53bd772224e9bf65756a7fd48c61672ec1be29dc59  packages/WanderburgCoop-0.6.13-original-dust-art.zip
+8e8defa6c85f5fe6412ecb3e352a3ec2141a1e5b11eef6708417f17ab7cce309  packages/WanderburgCoop-0.6.14-dust-debris-filter.zip
+b7917984477a167f0029d4ca7da0a86478a093451e7db571f472cb92d326c28b  packages/WanderburgCoop-0.6.15-native-particles.zip
+56b7834f61b60332590280cb4d91d8e705127d9c6fe954f432bf277376e52f99  packages/WanderburgCoop-0.6.16-native-wheels.zip
+a02e994fff3d3d4a95e7b6efbffaa41d89d99be275e6ecd570321fdf41f0e665  packages/WanderburgCoop-0.6.17-driving-variants.zip
+b0fc3ee1ddf334cee9d3018bd6845758564ce31a60cf26a0240219a6613a25e0  packages/WanderburgCoop-0.6.18-smoke-dust.zip
 3421f670aa5ed316c35277e44c21af3b3262f29deb85a6faebd9af38d5c5b97c  packages/WanderburgCoop-0.6.2-capture-diagnosis.zip
 8bfcbe6df749ab67943f144abc72b197c28adf1eefb9a38f753b233ebdf956d3  packages/WanderburgCoop-0.6.3-scale-fix.zip
 7276c5f101959612d45468cf5e355b39c896ee2c44f562a74f70e3db1ba44573  packages/WanderburgCoop-0.6.4-ground-marks.zip
@@ -33,4 +42,5 @@ cba383b72d133bb11a4cd77966f031a9503d681dfd284b885fb39397a5444149  source/Wanderb
 f1adc422007511fb9ea36a15039738626401c3c53fe270772202f492a47bceaa  source/WanderburgCoop-source-0.5.1.zip
 7caf5639f286e56a4f132a3cf404053709b548fc94890c1ad6610b8a3bf8bbdc  source/WanderburgCoop-source-0.5.2.zip
 bce970fdecdab843d9c596bb6f87c1f84db0c7de5032286e45f28af05481561f  source/WanderburgCoop-source-0.6.0.zip
+a7e578652259e0143f72402083238defae4aee2808e506ecdaa29cbd46922269  source/WanderburgCoop-source-0.6.18.zip
 70583bf7dfc89d48069477db7bdb24c2a4daf143e29af0183d2c52decb6cc0e9  source/WanderburgCoop-source-0.6.9.zip
