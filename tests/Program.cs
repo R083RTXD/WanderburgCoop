@@ -26,6 +26,81 @@ static void Pump(LocalSession host, LocalSession client, Func<bool> done, double
 }
 
 var closeGate = new FocusCloseGate();
+Check(!PlayerEdgePosition.TryPlace(0.5f,0.5f,1,800,600,out _,out _,out _), "Visible teammate has no edge indicator");
+Check(PlayerEdgePosition.TryPlace(2,0.5f,1,800,600,out var ex,out var ey,out var ea) &&
+    Math.Abs(ex-752)<0.01 && Math.Abs(ey-300)<0.01 && Math.Abs(ea)<0.01,
+    "Offscreen right teammate points right at the padded edge");
+Check(PlayerEdgePosition.TryPlace(-1,0.5f,1,800,600,out ex,out ey,out ea) && ex==48 && Math.Abs(Math.Abs(ea)-180)<0.01,
+    "Offscreen left teammate points left");
+Check(PlayerEdgePosition.TryPlace(0.5f,2,1,800,600,out ex,out ey,out ea) && ey==48 && Math.Abs(ea+90)<0.01,
+    "Upper teammate marker uses GUI top edge and upwards arrow");
+Check(PlayerEdgePosition.TryPlace(0.5f,-1,1,800,600,out ex,out ey,out ea) && ey==552 && Math.Abs(ea-90)<0.01,
+    "Lower teammate marker uses GUI bottom edge");
+Check(PlayerEdgePosition.TryPlace(2,2,1,1920,1080,out ex,out ey,out ea) && ex>=48 && ex<=1872 && ey>=48 && ey<=1032,
+    "Diagonal marker remains inside widescreen bounds");
+Check(PlayerEdgePosition.TryPlace(2,0.5f,-1,800,600,out ex,out ey,out ea) && ex==48,
+    "Behind-camera projection is reversed rather than pointing the wrong way");
+Check(PlayerEdgePosition.TryPlace(0.5f,0.5f,-1,800,600,out ex,out ey,out ea) && float.IsFinite(ex) && ey==552,
+    "Directly behind camera has a finite deterministic marker position");
+Check(!PlayerEdgePosition.TryPlace(float.NaN,1,1,800,600,out _,out _,out _) &&
+    !PlayerEdgePosition.TryPlace(2,1,1,10,10,out _,out _,out _), "Invalid projection or tiny window cannot draw a corrupt marker");
+var markerPlayer = new PlayerSnapshot(true,1,0,0,0,0);
+Check(PlayerEdgePosition.Eligible(true,true,markerPlayer,markerPlayer) &&
+    !PlayerEdgePosition.Eligible(false,true,markerPlayer,markerPlayer) &&
+    !PlayerEdgePosition.Eligible(true,false,markerPlayer,markerPlayer) &&
+    !PlayerEdgePosition.Eligible(true,true,markerPlayer,markerPlayer with {Scene=2}) &&
+    !PlayerEdgePosition.Eligible(true,true,markerPlayer,markerPlayer with {InRun=false}),
+    "Disconnect, stale snapshots, other scene and absent run hide teammate marker");
+Check(TestGodModePolicy.Protect(true,true,true), "Enabled godmode protects the local test player");
+Check(!TestGodModePolicy.Protect(false,true,true), "Godmode toggle OFF restores normal damage");
+Check(!TestGodModePolicy.Protect(true,true,false), "Godmode cannot protect enemies or a different entity");
+Check(!TestGodModePolicy.Protect(true,false,true), "Godmode requires the existing test save guard");
+static ParticleSample FxSample(float x = 1)
+{
+    var f = new float[28]; f[0] = x; f[21] = f[22] = f[23] = 1; f[24] = 0.5f; f[25] = 1;
+    return new(f, 0xff00ff00, 123, 456, 0, 0);
+}
+var fxPose = new VisualNodePose(11, 1, 2, 3, 0, 0, 0, 1, 1, 1, 1);
+var fx = new ParticleFrame(1, 10, 20, new[] { new ParticleEffect(11, 22, fxPose, new[] { FxSample() }) });
+Check(fx.IsValid, "Owner particle frame accepts valid cosmetic numeric data");
+string[] FxPacket(string payload) => ("WB07|FX|" + Guid.Empty.ToString("N") + "|" + payload).Split('|');
+var fxAssembler = new ParticleAssembler();
+Check(fxAssembler.Accept(FxPacket(fx.ToPayloads(1).Single()), out var decodedFx) &&
+    decodedFx.Effects[0].Particles[0].Values.SequenceEqual(fx.Effects[0].Particles[0].Values) &&
+    decodedFx.Effects[0].Particles[0].Color == 0xff00ff00 && decodedFx.Effects[0].Particles[0].Seed == 123,
+    "Particle position, size, lifetime, color and seed survive the wire format");
+Check(!fxAssembler.Accept(FxPacket(fx.ToPayloads(1).Single()), out _), "Repeated particle frames cannot replay old visuals");
+var emptyFx = new ParticleFrame(1, 10, 20, Array.Empty<ParticleEffect>());
+Check(fxAssembler.Accept(FxPacket(emptyFx.ToPayloads(2).Single()), out var clearedFx) && clearedFx.Effects.Count == 0,
+    "An empty complete effect frame explicitly clears old effects");
+var mutableFx = new float[28]; mutableFx[24] = 0.5f; mutableFx[25] = 1;
+var immutableFx = new ParticleSample(mutableFx, 0, 0, 0, 0, 0); mutableFx[0] = float.NaN;
+Check(immutableFx.IsValid && immutableFx.Values[0] == 0, "Published particle values cannot change behind the worker");
+Check(!FxSample(float.NaN).IsValid && !FxSample(float.PositiveInfinity).IsValid,
+    "Nonfinite particle values never enter native rendering");
+Check(!new ParticleFrame(1,10,20,new[] {fx.Effects[0],fx.Effects[0]}).IsValid,
+    "Duplicate emitter identities are rejected");
+Check(!new ParticleEffect(11,0,fxPose,new[] { FxSample() }).IsValid &&
+    !new ParticleEffect(11,22,fxPose,new[] {new ParticleSample(new float[28],0,0,0,50000,0)}).IsValid,
+    "Unknown template and invalid mesh/lifetime data are rejected");
+var maxFx = new ParticleFrame(1,10,20,Enumerable.Range(1,32).Select(i => new ParticleEffect((uint)i,22,
+    fxPose with { Id=(uint)i }, Enumerable.Range(0,32).Select(j=>FxSample(j)))));
+var maxPackets = maxFx.ToPayloads(3).Select(FxPacket).ToArray();
+Check(maxFx.IsValid && maxPackets.All(p => Encoding.ASCII.GetByteCount(string.Join("|",p)) <= 1200),
+    "Full 1024-particle frame stays within bounded UDP datagrams");
+var maxAssembler = new ParticleAssembler(); ParticleFrame maxDecoded = null;
+foreach (var packet in maxPackets.Reverse()) maxAssembler.Accept(packet, out maxDecoded);
+Check(maxDecoded?.Effects.Sum(e=>e.Particles.Count) == 1024,
+    "Out-of-order chunks assemble a complete maximum particle frame");
+var lossAssembler = new ParticleAssembler();
+Check(!lossAssembler.Accept(maxPackets[0],out _) && !lossAssembler.Accept(maxPackets[0],out _),
+    "Missing and duplicate particle chunks never publish partial effects");
+Check(lossAssembler.Accept(FxPacket(fx.ToPayloads(4).Single()),out _),
+    "A complete newer particle frame recovers from packet loss");
+var badFxPacket = FxPacket(fx.ToPayloads(5).Single()); badFxPacket[8] = "1000000";
+Check(!new ParticleAssembler().Accept(badFxPacket,out _), "Particle assembler rejects unbounded chunk allocation");
+var tooManyFx = new ParticleFrame(1,10,20,Enumerable.Range(1,33).Select(i=>new ParticleEffect((uint)i,22,fxPose with {Id=(uint)i},Array.Empty<ParticleSample>())));
+Check(!tooManyFx.IsValid, "Emitter count remains bounded even for malformed sources");
 var wheelRotation = VisualRootPose.NormalizeSample(new System.Numerics.Quaternion(9.181476E-17f, 8.812395E-15f, 1.0000001f, 4.768372E-07f));
 Check(new VisualNodePose(0x91798576, -2.8300009f, 1.56f, 2.5400007f,
     wheelRotation.X, wheelRotation.Y, wheelRotation.Z, wheelRotation.W, 1.0000002f, 1.0000002f, 1).IsValid,
@@ -356,6 +431,18 @@ using (var rawPeer = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0)))
     Thread.Sleep(15);
     host.Tick();
     Check(host.RemoteSnapshot == moved, "Different endpoint cannot inject snapshots with copied token");
+    var socketFx = new ParticleFrame(state.Scene,state.VehicleId,state.AppearanceId,fx.Effects);
+    foreach(var payload in socketFx.ToPayloads(1)) SendRaw("WB07|FX|"+Guid.NewGuid().ToString("N")+"|"+payload);
+    Check(host.EffectFramesReceived == 0, "Wrong session cannot inject cosmetic effects");
+    foreach(var payload in socketFx.ToPayloads(2)) SendRaw("WB07|FX|"+token+"|"+payload);
+    Check(host.EffectFramesReceived == 1 && host.RemoteEffects.Effects[0].Particles.Count == 1,
+        "Authenticated peer delivers original particle samples over UDP");
+    foreach(var payload in socketFx.ToPayloads(1)) SendRaw("WB07|FX|"+token+"|"+payload);
+    Check(host.EffectFramesReceived == 1, "Stale UDP effect sequence does not overwrite current visuals");
+    var foreignFx = Encoding.ASCII.GetBytes("WB07|FX|"+token+"|"+socketFx.ToPayloads(3).Single());
+    stranger.Send(foreignFx, foreignFx.Length, new IPEndPoint(IPAddress.Loopback,28714));
+    Thread.Sleep(15); host.Tick();
+    Check(host.EffectFramesReceived == 1, "Copied token from another endpoint cannot inject particles");
     SendRaw("WB07|BYE|" + token);
 }
 static void WaitUntil(Func<bool> done, double timeout = 3)
@@ -385,6 +472,11 @@ using (var backgroundClient = new BackgroundConnection())
     WaitUntil(() => backgroundClient.Info.RemotePose != null);
     Check(backgroundClient.Info.RemotePose?.Nodes.SequenceEqual(poseNodes) == true,
         "Plain animation data crosses the background-worker boundary without Unity references");
+    backgroundHost.PublishEffects(new ParticleFrame(state.Scene,state.VehicleId,state.AppearanceId,fx.Effects));
+    backgroundClient.PublishEffects(new ParticleFrame(state.Scene,state.VehicleId,state.AppearanceId,fx.Effects));
+    WaitUntil(()=>backgroundHost.Info.RemoteEffects != null && backgroundClient.Info.RemoteEffects != null);
+    Check(backgroundHost.Info.RemoteEffects?.Effects.Count == 1 && backgroundClient.Info.RemoteEffects?.Effects.Count == 1,
+        "Owner particle snapshots cross the worker in both directions");
     var spiderNodes = Enumerable.Range(1, 139).Select(i => poseNodes[0] with { Id = (uint)i }).ToArray();
     spiderNodes[8] = observedSpiderNode;
     int posesBeforeSpider = backgroundClient.Info.PoseFramesReceived;
@@ -397,6 +489,7 @@ using (var backgroundClient = new BackgroundConnection())
         backgroundClient.PublishPlayer(state with { X = 25 });
         spiderNodes[0] = spiderNodes[0] with { X = (float)spiderTimer.Elapsed.TotalSeconds };
         backgroundHost.PublishPose(new VisualPoseFrame(state.Scene, state.VehicleId, state.AppearanceId, spiderNodes));
+        backgroundHost.PublishEffects(new ParticleFrame(state.Scene,state.VehicleId,state.AppearanceId,maxFx.Effects));
         var sample = backgroundClient.Info;
         if (spiderTimer.Elapsed.TotalSeconds > 0.2)
         {
@@ -411,12 +504,16 @@ using (var backgroundClient = new BackgroundConnection())
         "Rising spider pose counts retain a fresh complete rig at presentation sampling times");
     Check(backgroundClient.Info.RemotePose?.Nodes[0].X > 0.8f,
         "Changing spider transforms survive immutable publication and worker handoff");
+    Check(backgroundClient.Info.RemoteEffects?.Effects.Sum(e=>e.Particles.Count) == 1024 &&
+        backgroundClient.Info.EffectFramesReceived >= 5,
+        "Maximum particle stream and 139-node rig coexist without starving pose traffic");
     int receivedBefore = backgroundHost.Info.Received;
     // Reproduce a Unity loading/focus stall longer than the old 5-second timeout.
     // No main-thread calls to either transport occur during this interval.
     Thread.Sleep(6500);
     Check(backgroundHost.Info.Connected && backgroundClient.Info.Connected,
         "Both connections survive 6.5 seconds without game Update");
+    Check(backgroundClient.Info.RemoteEffects == null, "Stalled owner sampling expires remote particles without disconnecting");
     Check(backgroundHost.Info.Received > receivedBefore + 10,
         "Worker keeps exchanging packets while game thread is stalled");
     Check(!backgroundHost.Info.RemoteSnapshot.InRun && !backgroundClient.Info.RemoteSnapshot.InRun,

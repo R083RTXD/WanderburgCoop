@@ -15,7 +15,7 @@ internal sealed class VehicleModel : IDisposable
     internal GameObject FootprintPrefab { get; private set; }
     private readonly RemoteDrivingEffects drivingEffects = new();
     internal bool HasNativeWheelTrails => drivingEffects.HasTrails;
-    internal void UpdateDrivingEffects(bool fresh) => drivingEffects.Update(visualRoot, fresh);
+    internal void UpdateDrivingEffects(bool fresh, IReadOnlySet<uint> streamed = null) => drivingEffects.Update(visualRoot, fresh, streamed);
     private bool poseInitialized;
     public int AnimatedNodeCount => poseTargets.Count;
     private Transform visualRoot;

@@ -29,6 +29,13 @@ public sealed class LocalSession : IDisposable
     private long nextPoseSequence;
     private double lastPoseSend = -1;
     private double lastPoseReceive = double.NegativeInfinity;
+    private readonly ParticleAssembler effectAssembler = new();
+    private long nextEffectSequence;
+    private double lastEffectSend = -1, lastEffectReceive = double.NegativeInfinity;
+    public ParticleFrame LocalEffects { get; set; }
+    public ParticleFrame RemoteEffects { get; private set; }
+    public int EffectFramesReceived { get; private set; }
+    public bool HasFreshEffects => Connected && clock.Elapsed.TotalSeconds - lastEffectReceive < 0.75;
     public bool Connected { get; private set; }
     public bool Active => socket != null;
     public string Status { get; private set; } = "Bereit";
@@ -63,6 +70,8 @@ public sealed class LocalSession : IDisposable
             if (OperatingSystem.IsWindows())
                 socket.Client.IOControl(unchecked((int)0x9800000C), new byte[4], null);
             socket.Client.Blocking = false;
+            socket.Client.ReceiveBufferSize = 1024 * 1024;
+            socket.Client.SendBufferSize = 1024 * 1024;
             peer = asHost ? null : new IPEndPoint(IPAddress.Loopback, Port);
             started = clock.Elapsed.TotalSeconds;
             Status = asHost ? "Host wartet auf zweiten Spieler (lokal)" : "Verbinde mit 127.0.0.1...";
@@ -118,6 +127,14 @@ public sealed class LocalSession : IDisposable
                     Received++;
                     continue;
                 }
+                if (parts[1] == "FX")
+                {
+                    if (!Connected || !RemoteSnapshot.InRun || !effectAssembler.Accept(parts, out var effects) ||
+                        effects.Scene != RemoteSnapshot.Scene || effects.Vehicle != RemoteSnapshot.VehicleId ||
+                        effects.Appearance != RemoteSnapshot.AppearanceId) continue;
+                    RemoteEffects = effects; lastEffectReceive = lastReceive = clock.Elapsed.TotalSeconds;
+                    EffectFramesReceived++; Received++; continue;
+                }
                 if (parts[1] == "BYE" && parts.Length == 3)
                 {
                     Stop();
@@ -167,6 +184,13 @@ public sealed class LocalSession : IDisposable
                 foreach (string payload in LocalPose.ToPayloads(nextPoseSequence++)) Send("POSE", payload);
                 lastPoseSend = now;
             }
+            if (Connected && LocalSnapshot.InRun && LocalEffects?.IsValid == true &&
+                LocalEffects.Scene == LocalSnapshot.Scene && LocalEffects.Vehicle == LocalSnapshot.VehicleId &&
+                LocalEffects.Appearance == LocalSnapshot.AppearanceId && now - lastEffectSend >= 0.1)
+            {
+                foreach (string payload in LocalEffects.ToPayloads(nextEffectSequence++)) Send("FX", payload);
+                lastEffectSend = now;
+            }
         }
         catch (SocketException ex)
         {
@@ -214,6 +238,8 @@ public sealed class LocalSession : IDisposable
         lastPoseSend = -1;
         lastPoseReceive = double.NegativeInfinity;
         PoseFramesReceived = 0;
+        LocalEffects = RemoteEffects = null; effectAssembler.Reset(); nextEffectSequence = 0;
+        lastEffectSend = -1; lastEffectReceive = double.NegativeInfinity; EffectFramesReceived = 0;
     }
 
     public void Dispose() => Disconnect();

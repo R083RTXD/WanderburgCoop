@@ -18,10 +18,13 @@ public sealed class ConnectionInfo
     public string Error { get; }
     public VisualPoseFrame RemotePose { get; }
     public int PoseFramesReceived { get; }
+    public ParticleFrame RemoteEffects { get; }
+    public int EffectFramesReceived { get; }
 
     public ConnectionInfo(bool active, bool connected, string status, int received,
         int sent, int snapshotsReceived, int sessionSeed, PlayerSnapshot remoteSnapshot, bool hasFreshSnapshot, string error = null,
-        VisualPoseFrame remotePose = null, int poseFramesReceived = 0)
+        VisualPoseFrame remotePose = null, int poseFramesReceived = 0,
+        ParticleFrame remoteEffects = null, int effectFramesReceived = 0)
     {
         Active = active;
         Connected = connected;
@@ -35,6 +38,7 @@ public sealed class ConnectionInfo
         Error = error;
         RemotePose = remotePose;
         PoseFramesReceived = poseFramesReceived;
+        RemoteEffects = remoteEffects; EffectFramesReceived = effectFramesReceived;
     }
 }
 
@@ -49,6 +53,8 @@ public sealed class BackgroundConnection : IDisposable
     private long snapshotPublishedAt;
     private VisualPoseFrame localPose;
     private long posePublishedAt;
+    private ParticleFrame localEffects;
+    private long effectsPublishedAt;
     private ConnectionInfo info = ConnectionInfo.Idle;
     private int command = -1;
     private int stopping;
@@ -88,6 +94,11 @@ public sealed class BackgroundConnection : IDisposable
         }
     }
 
+    public void PublishEffects(ParticleFrame effects)
+    {
+        lock (snapshotGate) { localEffects = effects; effectsPublishedAt = Stopwatch.GetTimestamp(); }
+    }
+
     private void Run()
     {
         using var session = new LocalSession();
@@ -111,12 +122,16 @@ public sealed class BackgroundConnection : IDisposable
                     session.LocalSnapshot = snapshot;
                     session.LocalPose = (Stopwatch.GetTimestamp() - posePublishedAt) /
                         (double)Stopwatch.Frequency <= 0.75 ? localPose : null;
+                    session.LocalEffects = (Stopwatch.GetTimestamp() - effectsPublishedAt) /
+                        (double)Stopwatch.Frequency <= 0.75 ? localEffects : null;
                 }
                 session.Tick();
                 Volatile.Write(ref info, new ConnectionInfo(session.Active, session.Connected, session.Status,
                     session.Received, session.Sent, session.SnapshotsReceived, session.SessionSeed,
                     session.RemoteSnapshot, session.HasFreshSnapshot, remotePose: session.HasFreshPose ? session.RemotePose : null,
-                    poseFramesReceived: session.PoseFramesReceived));
+                    poseFramesReceived: session.PoseFramesReceived,
+                    remoteEffects: session.HasFreshEffects ? session.RemoteEffects : null,
+                    effectFramesReceived: session.EffectFramesReceived));
                 Thread.Sleep(10);
             }
             session.Disconnect();

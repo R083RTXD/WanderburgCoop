@@ -15,6 +15,71 @@
 > aus dem gemeinsamen Player.log waren nicht zuverlässig. Am 22.10.2026 hat der
 > Nutzer das getrennte Beenden in beiden Richtungen mit 0.4.6 bestätigt.
 
+## 0.6.23 — 2026-11-01 — startup regression rollback
+
+- User reports game closes during startup in0.6.22. BepInEx log ends immediately
+  after ConnectionPanel registration, before the loaded banner or particle probe
+  success/failure. Native startup probe is the leading suspect; no complete crash
+  stack establishes the exact native instruction.
+- Remove startup particle probe and all experimental NativeArray allocations/
+  references. Exact particle capture/rendering explicitly disabled. Keep existing
+  cosmetic fallback, switchable local godmode and teammate edge marker.
+- Game launch still needs user retest. No automated window control or unlock/save
+  changes. Public GitHub remains tested0.6.18;0.6.22 is not a validated release.
+
+## 0.6.22 — 2026-11-01 — teammate offscreen pointer (local test)
+
+- Cyan castle on a black directional marker at the viewport edge, similar in
+  purpose to native healing-box indicators. Caption Mitspieler. Existing player
+  snapshots only; hidden for visible target, stale/disconnected peer, other scene
+  or inactive run. Handles window resizing, diagonal and behind-camera targets.
+- Includes ten new marker geometry/lifecycle checks. Native appearance unverified.
+  User now performs all window control/gameplay testing; no automated window input.
+- Also includes pending0.6.21 typed particle API experiment, still not tested in
+  native game. Godmode remains toggleable. New module meshes remain pending.
+
+## 0.6.21 — 2026-11-01 — typed NativeArray particle access (unpublished experiment)
+
+- 0.6.19/20 array GetParticles and SetParticles overloads are generated throw stubs.
+  Switch to existing typed Unity NativeArray overloads and supported allocator,
+  with explicit disposal; no raw pointers, manually built native layouts or icalls.
+- Main-thread startup selftest allocates/indexes/writes/reads an isolated hidden
+  particle system. Streaming enabled only after native roundtrip passes. Native
+  validation still pending. This version was built but never installed separately.
+
+## 0.6.20 — 2026-11-01 — switchable local test godmode
+
+- User requests a toggleable godmode before further visual debugging. Runtime-only,
+  OFF at process start, F9/panel switch. Intercept positive VM.TakeDamage and
+  VM.Death only for GM.gm.vm with active test save guard; healing/enemies unchanged.
+  Blocked hit counter shown, no health writes, unlock changes or persistence.
+- 158 managed checks pass; native hooks load successfully. Runtime damage test
+  being performed separately from the managed checks.
+- 0.6.19 visual test FAILED: both native logs show GetParticles array overload
+  throws NotSupportedException (Method unstripping failed). Actual DJ emitter is
+  found, but no FX frames are captured. Smoke remains old fallback. This is still
+  unresolved in 0.6.20; inspect typed NativeArray overload next.
+
+## 0.6.19 — 2026-11-01 — generic owner particle snapshots (local test, UNVERIFIED IN GAME)
+
+- Send actual particle fields from attached VP/VM and registered driving emitters
+  in both directions: position, velocity, size, rotation, color, age, seeds and
+  flags. No DJ/captain-name special case. Match local native renderer definitions.
+- Pause safe particle-only receiver copies and replace their particle buffers.
+  Suppress old driving-particle approximations only for definitions that match.
+  Preserve existing spider foot dust and wheel trails.
+- Bounded32 emitters,128 particles/emitter,1024 particles/frame,10Hz, <=1200-byte
+  datagrams. Atomic assembly, sequence/session/endpoint/identity/freshness checks,
+  explicit empty frames, disconnect cleanup. Larger socket buffers for FX bursts.
+- Main-thread native sampling/rendering only; immutable numeric worker frames.
+  No module setters, native pointers, source mutation, audio/gameplay cloning.
+-154 managed checks passed, including full particle load alongside139-node rigs.
+  Runtime appearance/API availability remain unverified. Missing templates and
+  clipped/invalid particle counts are displayed. Not a promise of every effect:
+  independent projectiles/world effects, particle-trail history, custom shader
+  streams and exact between-snapshot motion are still outside this prototype.
+- New module meshes and shared combat remain pending. GitHub stays0.6.18 until test.
+
 ## 0.6.18 — 2026-10-25 — smoke and simultaneous foot dust (local test)
 
 **User tested / Vom Nutzer getestet:** spider visuals now work. Normal castle

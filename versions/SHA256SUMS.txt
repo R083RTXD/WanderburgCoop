@@ -21,7 +21,11 @@ b7917984477a167f0029d4ca7da0a86478a093451e7db571f472cb92d326c28b  packages/Wande
 56b7834f61b60332590280cb4d91d8e705127d9c6fe954f432bf277376e52f99  packages/WanderburgCoop-0.6.16-native-wheels.zip
 a02e994fff3d3d4a95e7b6efbffaa41d89d99be275e6ecd570321fdf41f0e665  packages/WanderburgCoop-0.6.17-driving-variants.zip
 b0fc3ee1ddf334cee9d3018bd6845758564ce31a60cf26a0240219a6613a25e0  packages/WanderburgCoop-0.6.18-smoke-dust.zip
+0d63e9310c108196754de6be00484af818cf2a0d053f3f35a0ece59643bd580a  packages/WanderburgCoop-0.6.19-owner-particles.zip
 3421f670aa5ed316c35277e44c21af3b3262f29deb85a6faebd9af38d5c5b97c  packages/WanderburgCoop-0.6.2-capture-diagnosis.zip
+6e342a595cc58f06272280cd5b311260ce42fae3b670890744baa47f658108b5  packages/WanderburgCoop-0.6.20-test-godmode.zip
+9c23c428b3fedb3a5912737e50606e0470f28aa5db8c6e4a8da3b84c0414d277  packages/WanderburgCoop-0.6.22-player-edge.zip
+9235b90084bed47927377705b73174b21a03c1102861c3f187c0611167a754fe  packages/WanderburgCoop-0.6.23-startup-fix.zip
 8bfcbe6df749ab67943f144abc72b197c28adf1eefb9a38f753b233ebdf956d3  packages/WanderburgCoop-0.6.3-scale-fix.zip
 7276c5f101959612d45468cf5e355b39c896ee2c44f562a74f70e3db1ba44573  packages/WanderburgCoop-0.6.4-ground-marks.zip
 9384aabc7816064aaa1e4bc7b1f630f0a9e3376c91870325a7f23d4ec2f7f59b  packages/WanderburgCoop-0.6.5-boost-ground-test.zip
@@ -43,4 +47,5 @@ f1adc422007511fb9ea36a15039738626401c3c53fe270772202f492a47bceaa  source/Wanderb
 7caf5639f286e56a4f132a3cf404053709b548fc94890c1ad6610b8a3bf8bbdc  source/WanderburgCoop-source-0.5.2.zip
 bce970fdecdab843d9c596bb6f87c1f84db0c7de5032286e45f28af05481561f  source/WanderburgCoop-source-0.6.0.zip
 a7e578652259e0143f72402083238defae4aee2808e506ecdaa29cbd46922269  source/WanderburgCoop-source-0.6.18.zip
+d28b71d9cb1a00b2240b7c9ceb6f08cf8bf1f1a48eccf02ab9a6fccb37c98dc1  source/WanderburgCoop-source-0.6.23.zip
 70583bf7dfc89d48069477db7bdb24c2a4daf143e29af0183d2c52decb6cc0e9  source/WanderburgCoop-source-0.6.9.zip

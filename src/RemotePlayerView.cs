@@ -14,6 +14,8 @@ internal sealed class RemotePlayerView : IDisposable
     private bool initialized;
     private VehicleModel vehicleModel = new();
     private readonly RemoteGroundMarks groundMarks = new();
+    private readonly RemoteParticleView particleView = new();
+    public string EffectsStatus => particleView.Status;
     private bool marksErrorLogged;
     private uint vehicleId;
     private uint appearanceId;
@@ -33,7 +35,8 @@ internal sealed class RemotePlayerView : IDisposable
     public void Update(ConnectionInfo session, PlayerSnapshot local)
     {
         UpdateView(session, local);
-        vehicleModel.UpdateDrivingEffects(Visible && hasVehicleModel && session.RemotePose != null);
+        particleView.Update(Visible && hasVehicleModel ? root.transform : null, session.RemoteEffects, session.RemoteSnapshot);
+        vehicleModel.UpdateDrivingEffects(Visible && hasVehicleModel && session.RemotePose != null, particleView.Definitions);
         if (!marksErrorLogged)
         {
             try
@@ -120,6 +123,7 @@ internal sealed class RemotePlayerView : IDisposable
             if (material) Object.Destroy(material);
             material = null;
             vehicleModel.Dispose();
+            particleView.Clear();
             groundMarks.Clear();
             vehicleModel = candidateModel;
             root = candidateRoot;
@@ -178,6 +182,7 @@ internal sealed class RemotePlayerView : IDisposable
 
     private void ClearView()
     {
+        particleView.Clear();
         groundMarks.Clear();
         if (root) root.SetActive(false);
         if (root) Object.Destroy(root);
@@ -196,5 +201,6 @@ internal sealed class RemotePlayerView : IDisposable
         ClearView();
         groundMarks.Dispose();
         vehicleModel.Dispose();
+        particleView.Dispose();
     }
 }

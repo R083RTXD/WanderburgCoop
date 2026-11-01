@@ -13,6 +13,7 @@ public sealed class ConnectionPanel : MonoBehaviour
     private string lastStatus = "";
     private bool previousRunInBackground;
     private readonly RemotePlayerView remoteView = new();
+    private readonly PlayerEdgeIndicator edgeIndicator = new();
     private string playerStatus = "Warte auf laufenden Run";
     private bool playerErrorLogged;
     private bool viewErrorLogged;
@@ -24,6 +25,9 @@ public sealed class ConnectionPanel : MonoBehaviour
     private readonly VisualPoseSampler poseSampler = new();
     private float nextPoseSample;
     private bool poseErrorLogged;
+    private readonly ParticleCapture particleCapture = new();
+    private float nextEffectSample;
+    private bool effectsErrorLogged;
 
     public ConnectionPanel(IntPtr pointer) : base(pointer) { }
 
@@ -51,6 +55,8 @@ public sealed class ConnectionPanel : MonoBehaviour
             LocalTestFocus.HasCloseConfirmationHeld());
         if (Application.isFocused && Keyboard.current != null && Keyboard.current.f8Key.wasPressedThisFrame)
             ToggleMouse();
+        if (Application.isFocused && Keyboard.current != null && Keyboard.current.f9Key.wasPressedThisFrame)
+            TestGodMode.SetEnabled(!TestGodMode.Enabled);
         try
         {
             remoteView.Update(connection, local);
@@ -77,6 +83,7 @@ public sealed class ConnectionPanel : MonoBehaviour
         nextPoseSample = Time.unscaledTime + 0.05f;
         if (!connection.Connected || !local.InRun)
         {
+            session.PublishEffects(null);
             poseSampler.Capture(null, default);
             session.PublishPose(null);
             return;
@@ -93,6 +100,20 @@ public sealed class ConnectionPanel : MonoBehaviour
             {
                 SessionLog.LogError($"Visual pose sampling failed: {ex}");
                 poseErrorLogged = true;
+            }
+        }
+        if (Time.unscaledTime >= nextEffectSample)
+        {
+            nextEffectSample = Time.unscaledTime + 0.1f;
+            try
+            {
+                var vehicle = GM.gm && GM.gm.vm ? GM.gm.vm.vp : null;
+                session.PublishEffects(particleCapture.Capture(vehicle, local));
+            }
+            catch (Exception ex)
+            {
+                session.PublishEffects(null);
+                if (!effectsErrorLogged) { SessionLog.LogError($"Owner particle capture failed: {ex}"); effectsErrorLogged = true; }
             }
         }
     }
@@ -164,7 +185,7 @@ public sealed class ConnectionPanel : MonoBehaviour
     public void OnGUI()
     {
         float x = Math.Max(8, Screen.width - 408);
-        GUI.Box(new Rect(x, 8, 400, 454), "Wanderburg Co-op 0.6.18 - Rauch und Staub");
+        GUI.Box(new Rect(x, 8, 400, 546), "Wanderburg Co-op 0.6.23 - Startkorrektur");
         GUI.Label(new Rect(x + 12, 38, 376, 25), connection.Status);
         GUI.Label(new Rect(x + 12, 64, 376, 25), $"Pakete: gesendet {connection.Sent} / empfangen {connection.Received}");
         if (!connection.Active)
@@ -196,14 +217,22 @@ public sealed class ConnectionPanel : MonoBehaviour
         GUI.Label(new Rect(x + 12, 322, 376, 25), $"Aufnahme: {poseSampler.Status}");
         GUI.Label(new Rect(x + 12, 348, 376, 25), $"Spuren: {remoteView.GroundMarksStatus}");
         GUI.Label(new Rect(x + 12, 374, 376, 25), "Gleicher Welt-Seed; Gegner/Kampf noch getrennt.");
-        if (GUI.Button(new Rect(x + 12, 406, 372, 30),
+        GUI.Label(new Rect(x + 12, 400, 376, 25), $"Effekte ({connection.EffectFramesReceived}): {remoteView.EffectsStatus}");
+        GUI.Label(new Rect(x + 12, 426, 376, 25), $"Effektaufnahme: {particleCapture.Status}");
+        if (GUI.Button(new Rect(x + 12, 458, 372, 30),
+            $"F9: Godmode {(TestGodMode.Enabled ? "AN" : "AUS")} | blockiert {TestGodMode.BlockedHits}"))
+            TestGodMode.SetEnabled(!TestGodMode.Enabled);
+        if (GUI.Button(new Rect(x + 12, 498, 372, 30),
             LocalTestFocus.FreeMouse ? "F8: Maus frei (umschalten)" : "F8: Maus freigeben")) ToggleMouse();
+        edgeIndicator.Draw(connection, local);
     }
 
     public void OnDestroy()
     {
         session.Dispose();
         remoteView.Dispose();
+        edgeIndicator.Dispose();
+        particleCapture.Dispose();
         LocalTestFocus.Active = false;
         SharedWorldSeed.Update(0);
         LocalTestFocus.RestoreCursor();

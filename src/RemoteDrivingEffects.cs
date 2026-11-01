@@ -13,6 +13,8 @@ internal sealed class RemoteDrivingEffects : IDisposable
     {
         public ParticleSystem System;
         public bool Engine, Running, Manual;
+        public uint Definition;
+        public bool Streamed;
         public float Rate, Started, Carry;
     }
     private readonly List<Particle> particles = new();
@@ -87,7 +89,8 @@ internal sealed class RemoteDrivingEffects : IDisposable
                 {
                     particle.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
                     bool engine = IsEngine(source, t);
-                    particles.Add(new Particle { System = particle, Engine = engine, Rate = Rate(source, t, engine) });
+                    particles.Add(new Particle { System = particle, Engine = engine, Rate = Rate(source, t, engine),
+                        Definition = CosmeticParticles.Definition(particle) });
                 }
                 copy.SetActive(true);
                 holder.SetActive(true);
@@ -100,7 +103,7 @@ internal sealed class RemoteDrivingEffects : IDisposable
         catch (Exception ex) { Disable(ex); }
     }
 
-    public void Update(Transform root, bool fresh)
+    public void Update(Transform root, bool fresh, IReadOnlySet<uint> streamed = null)
     {
         if (failed || !root) return;
         try
@@ -120,6 +123,13 @@ internal sealed class RemoteDrivingEffects : IDisposable
             foreach (var particle in particles)
                 if (particle.System)
                 {
+                    if (streamed?.Contains(particle.Definition) == true)
+                    {
+                        if (!particle.Streamed) particle.System.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+                        particle.Streamed = true; particle.Running = false;
+                        continue;
+                    }
+                    particle.Streamed = false;
                     bool run = fresh && (particle.Engine || moving);
                     if (particle.Running != run)
                     {

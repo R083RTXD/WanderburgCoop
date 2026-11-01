@@ -5,7 +5,15 @@
 **TEST / IN ENTWICKLUNG — bisher nur Positionstests.**
 
 
-Latest user-tested snapshot: **0.6.18 (2026-10-25)**. Spider visuals accepted;
+**CURRENT DEVELOPMENT0.6.23 — STARTUP RETEST PENDING.**
+**AKTUELL0.6.23 — ERNEUTER SPIELSTART NOCH UNBESTÄTIGT.**
+0.6.22 crashes on startup;0.6.23 removes native probe/experimental buffer access.
+Exact particle streaming disabled. Godmode verified under fire in0.6.20.
+Randmarker ungetestet.0.6.22 startet nicht;0.6.23 entfernt den nativen Starttest.
+0.6.19 failed native particle access. Original failed packages are preserved for
+history only, not stable releases. User authorized this publication before retest.
+
+Historical user-tested snapshot: **0.6.18 (2026-10-25)**. Spider visuals accepted;
 normal-castle dust/smoke intensity differs, DJ music notes missing. New module
 meshes and gameplay sync remain pending. Locked variants untested.
 Zuletzt getestet: **0.6.18**. Spinne funktioniert; Staub-/Qualmstärke abweichend,
@@ -74,11 +82,17 @@ Anleitungen in älteren ZIPs können inzwischen widerlegte Aussagen enthalten.
 | 0.6.17 | Tracks visible, smoke/dust missing / Spuren sichtbar, Qualm/Staub fehlen | [ZIP](packages/WanderburgCoop-0.6.17-driving-variants.zip) | No complete matching snapshot archived / Kein vollständiger passender Snapshot archiviert |
 | 0.6.18 | Spider accepted; smoke intensity/DJ pending / Spinne bestätigt, Stärke/DJ offen | [ZIP](packages/WanderburgCoop-0.6.18-smoke-dust.zip) | [ZIP](source/WanderburgCoop-source-0.6.18.zip) |
 
-Both instances must use the same version, currently0.6.18 with WB07. Vehicle meshes/skin
+| 0.6.19 | FAILED native array API / Nativer Arrayzugriff fehlgeschlagen | [ZIP](packages/WanderburgCoop-0.6.19-owner-particles.zip) | Not separately archived / Nicht separat archiviert |
+| 0.6.20 | Local godmode verified under fire / Godmode unter Beschuss bestätigt | [ZIP](packages/WanderburgCoop-0.6.20-test-godmode.zip) | Not separately archived / Nicht separat archiviert |
+| 0.6.21 | Built native buffer probe, never installed separately / Nur gebaut | No preserved package / Kein Paket erhalten | Not separately archived / Nicht separat archiviert |
+| 0.6.22 | FAILED startup crash; edge marker untested / Startabsturz | [ZIP](packages/WanderburgCoop-0.6.22-player-edge.zip) | Not separately archived / Nicht separat archiviert |
+| 0.6.23 | Probe removed; startup UNCONFIRMED / Startkorrektur unbestätigt | [ZIP](packages/WanderburgCoop-0.6.23-startup-fix.zip) | [ZIP](source/WanderburgCoop-source-0.6.23.zip) |
+
+Both instances must use the same version, currently0.6.23 with WB07. Vehicle meshes/skin
 states are cosmetic; combat, weapons, enemies and progression remain independent.
 Both guides include the exact validation limits and local setup instructions.
 
-Beide Instanzen benötigen dieselbe Version, aktuell0.6.18 mit WB07. Fahrzeugmeshes und
+Beide Instanzen benötigen dieselbe Version, aktuell0.6.23 mit WB07. Fahrzeugmeshes und
 Ausbaustufen sind rein optisch; Kämpfe, Waffen, Gegner und Fortschritt laufen getrennt.
 Beide Anleitungen beschreiben Prüfstand und Einrichtung.
 

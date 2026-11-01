@@ -1,88 +1,84 @@
 # Wanderburg Multiplayer / Co-op Mod — WIP Positions- und Darstellungstests
 
-**TEST / IN ENTWICKLUNG — NOCH KEIN SPIELBARER MEHRSPIELER-KOOP.**
+**EXPERIMENTELLER ENTWICKLUNGSSTAND — NOCH KEIN SPIELBARER MULTIPLAYER-KOOP.**
 
-[English guide](README.md) · [Entwicklungsarchiv](versions/README.md) · [Changelog](CHANGELOG.md) · [MIT-Lizenz](LICENSE)
+[English](README.md) · [Versionsarchiv](versions/README.md) · [Changelog](CHANGELOG.md) · [MIT](LICENSE)
 
-Inoffizieller Mod von **R083RTXD**. Zuletzt vom Nutzer getestet: **0.6.18**,
-25.10.2026. Für Wanderburg **0.9.14b**, Windows x64, Unity 6000.0.63f1 und
-BepInEx 6.0.0-be.789 Unity IL2CPP. Spiel und Loader separat installieren.
+Inoffizieller Mod von **R083RTXD**. Aktueller Quellstand: **0.6.23**, 01.11.2026.
+Wanderburg0.9.14b, Windows x64, Unity6000.0.63f1, BepInEx6.0.0-be.789 IL2CPP.
+Spiel und Loader separat installieren. Keine Spielassets/Interop-Dateien enthalten.
 
-## Aktueller Teststand
+## Vor dem Test lesen
 
-- Zwei Instanzen auf demselben Windows-PC verbinden sich über UDP
-  `127.0.0.1:28714`. Position, Richtung, Burgmodelle und Rad-/Beinposen werden übertragen.
-- Der Nutzer bestätigt in 0.6.18 funktionierende Spinnenabdrücke, Staub und Animation.
-- Radspuren, Radstaub und Schornsteinqualm der normalen Burg sind sichtbar.
-  Die Staub-/Qualmstärke weicht vom Original ab; das bleibt ein bekannter Fehler.
-- Die grünen Musiknoten des Generals/DJs **fehlen auf der Gegenseite**.
-- Originale Partikelassets werden lokal verwendet. Dies überträgt ausgewählte
-  Effekte, nicht sämtliche Partikel, Animationen oder fertige Bildframes.
-- Nach Schließen von Host oder Client bleibt die andere Instanz im Nutzertest an.
-  Hintergrundnetzwerk übersteht Ladepausen; F8 gibt vorübergehend die Maus frei.
-- Bei Verbindung vor dem Laden wird der Host-Seed vor MapGenerator.Awake gesetzt.
-  Vollständig identische Gelände-/Kollisions- und Weltdaten sind nicht bestätigt.
-- Normale Burg und Spinnenburg getestet; gesperrte Varianten bleiben **UNGETESTET**.
-  Dafür werden keine Freischaltungen oder Spielstände verändert.
+**0.6.22 stürzt beim Start ab. Nicht für normale Tests verwenden.**
+0.6.23 entfernt den verdächtigen nativen Partikel-Starttest und den experimentellen
+NativeArray-Zugriff. **Erfolgreicher Spielstart mit0.6.23 ist NOCH NICHT BESTÄTIGT.**
+Dieser Entwicklungsstand wird auf ausdrücklichen Nutzerwunsch veröffentlicht.
 
-## Bekannte Grenzen und nächste Arbeit
+Die exakte Partikelübertragung ist DEAKTIVIERT. DJ-Musiknoten fehlen weiterhin
+auf der Gegenseite; Staub-/Qualmstärke können abweichen. Bisherige Ersatzdarstellung,
+Godmode und neuer Randmarker bleiben. Der Randmarker ist optisch noch ungeprüft.
+Falls0.6.23 weiter beim Start abstürzt, auf das erhaltene [0.6.20-Godmode-Paket](versions/packages/WanderburgCoop-0.6.20-test-godmode.zip)
+zurückgehen und erst den Startfehler klären.
 
-Neue Modulmodelle werden **noch nicht synchronisiert**. Nach Ausbau bleibt die
-bekannte Burg sichtbar und kann `Burg (Ausbau offen)` anzeigen. Bei unbekanntem
-Anfangsmodell kann die türkise Testfigur erscheinen. Beim Nitro bleibt die Burg
-sichtbar, seine Effekte fehlen jedoch teilweise. Kettentextur-Bewegung und
-besondere Bein-Schritteffekte sind noch offen.
+## Tatsächliche Testergebnisse
 
-Als Nächstes: tatsächliche Effektauslösung der Besitzerburg, DJ-/Generalseffekte,
-Staub-/Qualmstärke und Modulmodelle übertragen. Der
-[Plan zur Effektübertragung](Docs/VisualReplicationRoadmap.md) beschreibt offene
-Arbeit; sie ist **in 0.6.18 noch nicht implementiert**.
+- Zwei Instanzen auf demselben PC verbinden sich über UDP127.0.0.1:28714.
+  Burgmodelle, Richtung, Position und Rad-/Spinnenbeinposen werden übertragen.
+- Spinnenabdrücke/-staub mit0.6.18 vom Nutzer bestätigt. Native Radspuren sichtbar;
+  normale Staub-/Qualmstärke abweichend. Gesperrte Burgen bleiben UNGETESTET.
+- Godmode in0.6.20 unter Beschuss in beiden Logs bestätigt; Host zuletzt161
+  blockierte Treffer. F9 oder Modschalter, je Instanz separat. Beim Programmstart
+  AUS, nur lokale Burg, keine Wiederbelebung eines bereits verlorenen Runs.
+- Getrenntes Beenden hält die andere Instanz im bisherigen Test am Leben.
+  F8 gibt die Maus frei.
+-0.6.19-Partikelübertragung FEHLGESCHLAGEN: native Array-Methoden werfen Method
+  unstripping failed. Bestandene verwaltete Prüfungen bestätigen diese API nicht.
+-0.6.22 führte den Startabsturz ein. Log endet vor dem Starttest-Ergebnis; ein
+  vollständiger Crash-Stack zur exakten nativen Fehlerstelle fehlt.
 
-Gegner, Waffen, Angriffe, Schaden, Lebenspunkte, Beute, XP, Ausbauten und Fortschritt
-laufen weiterhin getrennt. Es gibt **keine gemeinsam autoritative Welt**.
+## Noch offen
+
+Neue Modulmodelle nach Ausbau, exakte DJ-/Generalseffekte, vollständige Nitro-
+Effekte, Kettentextur-Bewegung und besondere Schritteffekte fehlen weiterhin.
+Burg (Ausbau offen) behält lediglich das bekannte Modell. Bei unbekanntem Aussehen
+kann die türkise Testfigur erscheinen.
+
+Gegner, Waffen, Schaden, Lebenspunkte, Beute, XP und Fortschritt laufen getrennt.
+Keine gemeinsam autoritative Kampf-/Spielwelt. Host-Seed wird bei vorheriger
+Verbindung vor dem Laden gesetzt; identisches Gelände/Kollision nicht bestätigt.
 Internet-/LAN-Suche, Einladungscodes, NAT-Verbindung und Steam-Lobbys fehlen.
-Dies ist ein Loopback-Prototyp, noch kein gemeinsamer Kampfmodus.
 
-**Gefundene Spielstand-Schreibmethoden sind blockiert. Test-Fortschritt wird NICHT
-gespeichert. Vor normalem Spielen den Mod entfernen und Spielstände sichern.**
+**Gefundene Spielstand-Schreibpfade sind blockiert. Testfortschritt wird NICHT
+gespeichert. Für normales Spielen Mod entfernen und Spielstände sichern.
+Keine Freischaltungen werden verändert.**
 
-## Installation und lokaler Test
+## Lokal einrichten
 
-1. Passendes BepInEx 6 Unity IL2CPP x64 installieren und das Spiel einmal starten,
-   damit Interop-Dateien entstehen.
-2. [Test-ZIP 0.6.18](versions/packages/WanderburgCoop-0.6.18-smoke-dust.zip) herunterladen.
-3. Alle Spiele schließen. Nur `WanderburgCoopTest.dll` nach `BepInEx/plugins/`
-   kopieren und die alte DLL ersetzen. Nur eine Mod-Version installieren.
-4. Beide Spiele normal starten; **beide müssen 0.6.18 anzeigen**.
-5. Im Hauptmenü **Host erstellen** und im zweiten Spiel **Lokal beitreten**.
-   Verbindung abwarten, danach dieselbe Landschaft laden.
-6. Burgmodelle, Räder/Beine, Abdrücke und Staub vergleichen. `Posen` zählt
-   empfangene Animationsframes; `Animation: Knoten` zeigt passende Knoten.
-7. F8 gibt die Maus frei. Qualm und Generalseffekte mit den bekannten Fehlern
-   oben vergleichen. Keine unsichtbaren batchmode/nographics-Tests.
+1. Passendes BepInEx6 Unity IL2CPP x64 installieren; einmal für Interop starten.
+2. Zum UNBESTÄTIGTEN Startkorrektur-Test [Entwicklungs-ZIP0.6.23](versions/packages/WanderburgCoop-0.6.23-startup-fix.zip) laden.
+3. Alle Spiele schließen. BepInEx/plugins/WanderburgCoopTest.dll ersetzen; nur eine Version.
+4. Normal starten. Beide Testinstanzen müssen dieselbe Version anzeigen.
+5. Im Hauptmenü Host erstellen / Lokal beitreten; vor dem Laden gleicher Landschaft warten.
+6. Godmode bei Bedarf einschalten. Andere Burg aus dem Bild fahren: türkisfarbener
+   Burgpfeil soll am Rand erscheinen und bei Rückkehr/Trennung verschwinden.
+7. Exakte Effektanzeige meldet Partikelstream deaktiviert. Ersatzqualm ist keine
+   exakte Übertragung. Nutzer übernimmt sämtliche Fenstersteuerung und Spieltests.
 
-## Selbst bauen und Prüfstand
+## Bauen und Prüfstand
 
-.NET 10 SDK installieren. Mod-Ziel: .NET 6; verwaltete Prüfungen: .NET 10.
-Benötigt werden die Interop-Assemblies der eigenen Spielinstallation.
+.NET10 SDK; Mod net6, verwaltete Prüfungen net10. Eigene Interop-Dateien erforderlich.
 
 ```powershell
 ./build.ps1 -GameRoot 'D:/SteamLibrary/steamapps/common/Wanderburg Game'
 dotnet run --project ./tests/ConnectionChecks.csproj -c Release
 ```
 
-0.6.18 kompiliert ohne Warnungen/Fehler; **133 verwaltete Prüfungen** bestanden.
-Dies bestätigt weder exakte native Darstellung noch vollständiges Gameplay oder
-jede Burgvariante. SHA256 der vom Nutzer getesteten installierten DLL:
-`1037499D66D4308E7EFA8653DC0BE87DD1C72CF04FA6F9360147D9D8FAA46476`.
+0.6.23 kompiliert ohne Warnungen/Fehler. Verwaltete Prüfungen betreffen Protokoll,
+Godmode-Regeln und Randgeometrie; sie bestätigen weder Spielstart noch Darstellung.
+[Checkliste für die nächste Sitzung](Docs/NextSession.md) enthält den offenen Test.
+Der [Effektplan](Docs/VisualReplicationRoadmap.md) beschreibt weitere Arbeit.
 
-## Entwicklung und Lizenz
-
-Das [Archiv](versions/README.md) enthält Originalpakete einschließlich
-fehlgeschlagener Versuche, vorhandene Quellcode-Snapshots und Prüfsummen.
-Anleitungen in alten ZIPs können überholt sein; aktuelle Ergebnisse stehen hier.
-Fehlende historische Quellen werden nicht als erfundene Git-Historie rekonstruiert.
-
-Eigener Mod-Code: MIT. [Drittanbieterhinweise](THIRD_PARTY_NOTICES.md).
-Keine Spieldateien, extrahierten Grafiken, Interop-Assemblies, Spielstände,
-privaten Logs oder Crashdumps enthalten.
+Eigener Mod-Code MIT. [Drittanbieterhinweise](THIRD_PARTY_NOTICES.md).
+Anleitungen alter ZIPs können überholt sein. Fehlgeschlagene Versionen bleiben
+zur Entwicklungsdokumentation erhalten, nicht als Stabilitätsempfehlung.

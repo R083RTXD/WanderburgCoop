@@ -9,7 +9,7 @@ public sealed class WanderburgCoopPlugin : BasePlugin
 {
     public const string PluginGuid = "de.wanderburg.coop";
     public const string PluginName = "Wanderburg Co-op";
-    public const string PluginVersion = "0.6.18";
+    public const string PluginVersion = "0.6.23";
 
     public override void Load()
     {
@@ -19,6 +19,7 @@ public sealed class WanderburgCoopPlugin : BasePlugin
             TestSaveGuard.Install(harmony, Log);
             LocalTestFocus.Install(harmony, Log);
             SharedWorldSeed.Install(harmony, Log);
+            TestGodMode.Install(harmony, Log);
         }
         catch (Exception ex)
         {

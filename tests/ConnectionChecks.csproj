@@ -6,6 +6,9 @@
     <Nullable>disable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../src/PlayerEdgePosition.cs" Link="PlayerEdgePosition.cs" />
+    <Compile Include="../src/TestGodModePolicy.cs" Link="TestGodModePolicy.cs" />
+    <Compile Include="../src/ParticleFrame.cs" Link="ParticleFrame.cs" />
     <Compile Include="../src/GroundMarkGate.cs" Link="GroundMarkGate.cs" />
     <Compile Include="../src/VisualRootPose.cs" Link="VisualRootPose.cs" />
     <Compile Include="../src/LocalSession.cs" Link="LocalSession.cs" />
